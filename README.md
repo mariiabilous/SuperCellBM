@@ -185,214 +185,20 @@ Compute metacells in two settings:
     default parameters, but at the same set of genes as Super-cells
 
 ``` r
-invisible(
-  SC.mc <- compute_supercells_metacells(
-    sc.counts = sc.counts, 
-    gamma.seq = .gamma.seq,
-    SC.list = SC.list,
-    proj.name = proj.name,
-    ToComputeSC = ToComputeSC, 
-    mc.k.knn = 100,
-    T_vm_def = 0.08,
-    MC.folder = "MC", 
-    MC_gene_settings = c('metacell_default', 'metacell_SC_like') # do not change
-  )
+SC.mc <- compute_supercells_metacells(
+  sc.counts = sc.counts, 
+  gamma.seq = .gamma.seq,
+  SC.list = SC.list,
+  proj.name = proj.name,
+  ToComputeSC = ToComputeSC, 
+  mc.k.knn = 100,
+  T_vm_def = 0.08,
+  MC.folder = "MC", 
+  MC_gene_settings = c('metacell_default', 'metacell_SC_like') # do not change
 )
 ```
 
-    ## initializing scdb to examples/data/Tian/MC/metacell_default
-
-    ## Calculating gene statistics...
-
-    ## will downsamp
-
-    ## done downsamp
-
-    ## will gen mat_n
-
-    ## done gen mat_n
-
-    ## done computing basic gstat, will compute trends
-
-    ## ..done
-
-    ## will build balanced knn graph on 3918 cells and 2940 genes, this can be a bit heavy for >20,000 cells
-
-    ## [1] "done i,j,x"
-    ## [1] "done W as sparse matrix"
-    ## [1] "done colnames, rownames of W"
-    ## [1] "done remove outliers"
-    ## [1] "done graph form adj matrix (sparse)"
-    ## [1] "done as.undirected graph"
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 379554 left with 153208 based on co-cluster imbalance
-
-    ## building metacell object, #mc 87
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs KRT81
-
-    ## [1] "min_mc_size 1"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 420498 left with 164711 based on co-cluster imbalance
-
-    ## building metacell object, #mc 74
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs AKR1B10
-
-    ## [1] "min_mc_size 3"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 473321 left with 187723 based on co-cluster imbalance
-
-    ## building metacell object, #mc 58
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs KRT81
-
-    ## [1] "min_mc_size 8"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## initializing scdb to examples/data/Tian/MC/metacell_SC_like
-
-    ## Calculating gene statistics...
-
-    ## will downsamp
-
-    ## done downsamp
-
-    ## will gen mat_n
-
-    ## done gen mat_n
-
-    ## done computing basic gstat, will compute trends
-
-    ## ..done
-
-    ## will build balanced knn graph on 3918 cells and 1000 genes, this can be a bit heavy for >20,000 cells
-
-    ## [1] "done i,j,x"
-    ## [1] "done W as sparse matrix"
-    ## [1] "done colnames, rownames of W"
-    ## [1] "done remove outliers"
-    ## [1] "done graph form adj matrix (sparse)"
-    ## [1] "done as.undirected graph"
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 422867 left with 160291 based on co-cluster imbalance
-
-    ## building metacell object, #mc 85
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on GPX2 vs IFITM3
-
-    ## [1] "min_mc_size 1"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 469880 left with 174233 based on co-cluster imbalance
-
-    ## building metacell object, #mc 72
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs CYP24A1
-
-    ## [1] "min_mc_size 3"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 540717 left with 201103 based on co-cluster imbalance
-
-    ## building metacell object, #mc 57
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs KRT81
-
-    ## [1] "min_mc_size 8"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
+### Get actual graining levels obtained with Metacell
 
 ``` r
 additional_gamma_seq <- get_actual_gammas_metacell(SC.mc)
@@ -448,46 +254,25 @@ SC.list <- compute_supercells_additional_gammas(
 ```
 
     ## [1] "GAMMMA: 46"
-    ## [1] "Exact"
-    ## [1] "SEED: 12345"
     ## [1] "Approx"
-    ## [1] "Random"
     ## [1] "Subsampling"
-    ## [1] "SEED: 111"
     ## [1] "Approx"
-    ## [1] "Random"
     ## [1] "Subsampling"
-    ## [1] "SEED: 19"
     ## [1] "Approx"
-    ## [1] "Random"
     ## [1] "Subsampling"
     ## [1] "GAMMMA: 54"
-    ## [1] "Exact"
-    ## [1] "SEED: 12345"
     ## [1] "Approx"
-    ## [1] "Random"
     ## [1] "Subsampling"
-    ## [1] "SEED: 111"
     ## [1] "Approx"
-    ## [1] "Random"
     ## [1] "Subsampling"
-    ## [1] "SEED: 19"
     ## [1] "Approx"
-    ## [1] "Random"
     ## [1] "Subsampling"
     ## [1] "GAMMMA: 69"
-    ## [1] "Exact"
-    ## [1] "SEED: 12345"
     ## [1] "Approx"
-    ## [1] "Random"
     ## [1] "Subsampling"
-    ## [1] "SEED: 111"
     ## [1] "Approx"
-    ## [1] "Random"
     ## [1] "Subsampling"
-    ## [1] "SEED: 19"
     ## [1] "Approx"
-    ## [1] "Random"
     ## [1] "Subsampling"
 
 ``` r

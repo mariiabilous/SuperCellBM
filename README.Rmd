@@ -153,7 +153,7 @@ cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "),
 - 'metacell_default' - when metacell is computed with the default parameters (from the tutorial), using gene set filtered by MC
 - 'metacell_SC_like' - when metacell is computed with the same default parameters, but at the same set of genes as Super-cells 
 
-```{r compute metacells}
+```{r compute metacells, results='hide', message=FALSE}
 
 SC.mc <- compute_supercells_metacells(
   sc.counts = sc.counts, 
@@ -194,7 +194,7 @@ rm(SC.mc.fp, SC.mc.av, SC.mc)
 ## Compute super-cells (Exact, Approx, Subsampling and Random) at the addidional grainig levels obtained with Metacell.
 So that we can dirrectly compare the results of Super-cells and Metacells at the same graining levels.
 
-```{r compute SC at additionla gammas}
+```{r compute SC at additional gammas}
 filename <- paste0('additional_gammas', filename_suf)
 
 SC.list <- compute_supercells_additional_gammas(
