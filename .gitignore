@@ -1,0 +1,15 @@
+*.DS_Store
+.Rproj.user
+.Rhistory
+*.RData
+*.Rdata
+*.Rds
+*.RDS
+*.RDs
+.Ruserdata
+.Rproj
+
+*.Rproj
+examples/data/*
+examples/data/
+
