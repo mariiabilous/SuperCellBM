@@ -35,6 +35,26 @@ whether to compute super-cell (`ToComputeSC`) or whether to compute super-cell g
 ```{r flags}
 ToComputeSC <- T
 ToComputeSC_GE <- T
+
+ToTestPackage <- T # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
+
+filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
+
+if(ToTestPackage){
+  testing_gamma_seq <- c(1, 10, 100)
+  testing_seed_seq <- .seed.seq[1:3]
+  
+  warning(paste("The reduced set of graining leveles and seeds will be used, to get real output, turn it ti FALSE"))
+  warning(paste("Original set of graining levels is:", paste(.gamma.seq, collapse = ", "), 
+                "but used testing set is:", paste(testing_gamma_seq, collapse = ", ")))
+  warning(paste("Original set of seeds  is:", paste(.seed.seq, collapse = ", "), 
+                "but used testing set is:", paste(testing_seed_seq, collapse = ", ")))
+  
+  .gamma.seq <- testing_gamma_seq
+  .seed.seq <- testing_seed_seq
+  
+  filename_suf = "_testing_package"
+}
 ```
 
 ##Load `cell_lines` data from \link[Tian et al., 2019](https://pubmed.ncbi.nlm.nih.gov/31133762/).
@@ -101,21 +121,22 @@ names(GT.cell.type.num)     <- names(GT.cell.type)
 
 ```
 
-## Compute Super-cell structure
+## Compute Super-cells structure
 for the Exact, Aprox (Super-cells obtained with the exact or approximate coarse-graining), Subsampling or Random (random grouping of cells into super-cells)
 
-```{r compute super-cell structure}
-  
+```{r compute super-cell structure, message=FALSE, warning=FALSE}
+filename <- paste0('initial', filename_suf)
+
 SC.list <- compute_supercells(
   sc.GE,
   ToComputeSC = ToComputeSC,
   data.folder = data.folder,
-  filename = 'initial',
+  filename = filename,
   gamma.seq = .gamma.seq,
   n.var.genes = .N.var.genes,
   k.knn = .k.knn,
   n.pc = .N.comp,
-  approx.N = 1000,
+  approx.N = .approx.N,
   fast.pca = TRUE,
   genes.use = .genes.use, 
   genes.exclude = .genes.omit,
@@ -124,14 +145,16 @@ SC.list <- compute_supercells(
 
 cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "), 
           "\nat graining levels:", paste(names(SC.list[['approx']]), collapse = ", "),
-          "\nfor seeds:", paste(names(SC.list[['approx']][[1]]), collapse = ", "), "\n"))
+          "\nfor seeds:", paste(names(SC.list[['approx']][[1]]), collapse = ", "), "\n",
+          "\nand saved to / loaded from", paste0(filename, ".Rds")))
 ```
 
 ## Compute metacells in two settings:
 - 'metacell_default' - when metacell is computed with the default parameters (from the tutorial), using gene set filtered by MC
 - 'metacell_SC_like' - when metacell is computed with the same default parameters, but at the same set of genes as Super-cells 
 
-```{r computr metacells}
+```{r compute metacells}
+
 SC.mc <- compute_supercells_metacells(
   sc.counts = sc.counts, 
   gamma.seq = .gamma.seq,
@@ -143,12 +166,15 @@ SC.mc <- compute_supercells_metacells(
   MC.folder = "MC", 
   MC_gene_settings = c('metacell_default', 'metacell_SC_like') # do not change
 )
+```
 
+### Get actual graining levels obtained with Metacell
+```{r get actual graining levels obtained with metacell}
 additional_gamma_seq <- get_actual_gammas_metacell(SC.mc)
 
-cat(paste("Metacells were computed in", length(names(SC.mc)), "settings:", paste(names(SC.mc), collapse = ", "), "\n",
-          "For Gammas:", paste(names(SC.mc[[1]]), collapse = ", "), "\n",
-          "But actual gammas are:", paste(additional_gamma_seq, collapse = ", "), "\n"
+cat(paste("Metacells were computed in", length(names(SC.mc)), "settings:", paste(names(SC.mc), collapse = ", "), 
+          "\nfor Gammas:", paste(names(SC.mc[[1]]), collapse = ", "), 
+          "\nbut actual gammas are:", paste(additional_gamma_seq, collapse = ", ")
 ))
 
 
@@ -169,19 +195,21 @@ rm(SC.mc.fp, SC.mc.av, SC.mc)
 So that we can dirrectly compare the results of Super-cells and Metacells at the same graining levels.
 
 ```{r compute SC at additionla gammas}
+filename <- paste0('additional_gammas', filename_suf)
+
 SC.list <- compute_supercells_additional_gammas(
   SC.list,
   additional_gamma_seq = additional_gamma_seq,
-  ToComputeSC = TRUE,
+  ToComputeSC = ToComputeSC,
   data.folder = data.folder,
-  filename = 'additional_gammas',
-  approx.N = 1000,
+  filename = filename,
+  approx.N = .approx.N,
   fast.pca = TRUE
 )
 
-print(paste("Super-cells of methods:", paste(names(SC.list), collapse = ", "), 
-      "were computed at aggitional graining levels:", paste(additional_gamma_seq, collapse = ", "), "
-      and added to SC.list"
+cat(paste("Super-cells of methods:", paste(names(SC.list), collapse = ", "), 
+      "were computed at aggitional graining levels:", paste(additional_gamma_seq, collapse = ", "), 
+      "\nand added to SC.list"
       ))
 ```
 
@@ -193,6 +221,9 @@ SC.list <- c(SC.list, SC.mc.expanded)
 names(SC.list)
 rm(SC.mc.expanded)
 
+filename <- paste0("all", filename_suf)
+
+saveRDS(SC.list, file = file.path(data.folder, "SC", paste0(filename, ".Rds")))
 ```
 
 ## Compute GE for Super-cell data 
@@ -206,18 +237,28 @@ GE profile for the super-cell data is computede:
 
 
 ```{r compute GE for all super cell like objects}
+filename <- paste("all", filename_suf)
 
 SC.GE.list <- compute_supercells_GE(
   sc.GE = sc.GE, 
   SC.list = SC.list,
   ToComputeSC_GE = ToComputeSC_GE, 
   data.folder = data.folder,
-  filename = 'all'
+  filename = filename
 )
 
 cat(paste("Gene expression profile computed for:", paste(names(SC.GE.list), collapse = ", "), 
     "\nat graining levels:", paste(sort(as.numeric(names(SC.GE.list[['Approx']]))), collapse = ", "),
-    "\nfor seeds:", paste(names(SC.GE.list[['Approx']][[1]]), collapse = ", ")))
+    "\nfor seeds:", paste(names(SC.GE.list[['Approx']][[1]]), collapse = ", "),
+    "\nand saved to / loaded from", paste0(filename, ".Rds")
+    ))
+```
+#### Final
+```{r Final}
+print("Done! Congrats!")
+
+warning(paste("(!) Script was run in a test mode, to get real cell_line super-cell data, run this script with ToTestPackage <- FALSE"))
+
 ```
 
 

@@ -40,7 +40,36 @@ sure, this file exists :)
 ``` r
 ToComputeSC <- T
 ToComputeSC_GE <- T
+
+ToTestPackage <- T # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
+
+filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
+
+if(ToTestPackage){
+  testing_gamma_seq <- c(1, 10, 100)
+  testing_seed_seq <- .seed.seq[1:3]
+  
+  warning(paste("The reduced set of graining leveles and seeds will be used, to get real output, turn it ti FALSE"))
+  warning(paste("Original set of graining levels is:", paste(.gamma.seq, collapse = ", "), 
+                "but used testing set is:", paste(testing_gamma_seq, collapse = ", ")))
+  warning(paste("Original set of seeds  is:", paste(.seed.seq, collapse = ", "), 
+                "but used testing set is:", paste(testing_seed_seq, collapse = ", ")))
+  
+  .gamma.seq <- testing_gamma_seq
+  .seed.seq <- testing_seed_seq
+  
+  filename_suf = "_testing_package"
+}
 ```
+
+    ## Warning: The reduced set of graining leveles and seeds will be used, to get real
+    ## output, turn it ti FALSE
+
+    ## Warning: Original set of graining levels is: 1, 2, 5, 10, 20, 50, 100, 200 but
+    ## used testing set is: 1, 10, 100
+
+    ## Warning: Original set of seeds is: 12345, 111, 19, 42, 7, 559241, 123, 987, 234,
+    ## 91, 877, 451, 817 but used testing set is: 12345, 111, 19
 
 \#\#Load `cell_lines` data from
 (<a href="https://pubmed.ncbi.nlm.nih.gov/31133762/" class="uri">https://pubmed.ncbi.nlm.nih.gov/31133762/</a>).
@@ -109,326 +138,43 @@ names(GT.cell.type.num)     <- names(GT.cell.type)
 #head(gene.meta)
 ```
 
-Compute Super-cell structure
-----------------------------
+Compute Super-cells structure
+-----------------------------
 
 for the Exact, Aprox (Super-cells obtained with the exact or approximate
 coarse-graining), Subsampling or Random (random grouping of cells into
 super-cells)
 
 ``` r
+filename <- paste0('initial', filename_suf)
+
 SC.list <- compute_supercells(
   sc.GE,
   ToComputeSC = ToComputeSC,
   data.folder = data.folder,
-  filename = 'initial',
+  filename = filename,
   gamma.seq = .gamma.seq,
   n.var.genes = .N.var.genes,
   k.knn = .k.knn,
   n.pc = .N.comp,
-  approx.N = 1000,
+  approx.N = .approx.N,
   fast.pca = TRUE,
   genes.use = .genes.use, 
   genes.exclude = .genes.omit,
   seed.seq = .seed.seq
   )
-```
 
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 3918
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is set to N.SC 1959
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-    ## Warning in SuperCell::SCimplify(X = sc.GE, genes.use = genes.use, genes.exclude
-    ## = genes.exclude, : N.approx is not much larger than desired number of super-
-    ## cells, so an approximate simplification may take londer than an exact one!
-
-``` r
 cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "), 
           "\nat graining levels:", paste(names(SC.list[['approx']]), collapse = ", "),
-          "\nfor seeds:", paste(names(SC.list[['approx']][[1]]), collapse = ", "), "\n"))
+          "\nfor seeds:", paste(names(SC.list[['approx']][[1]]), collapse = ", "), "\n",
+          "\nand saved to / loaded from", paste0(filename, ".Rds")))
 ```
 
     ## Super-cell computed for: Exact, Approx, Random, Subsampling 
     ## at graining levels:  
-    ## for seeds:
+    ## for seeds:  
+    ##  
+    ## and saved to / loaded from initial_testing_package.Rds
 
 Compute metacells in two settings:
 ----------------------------------
@@ -439,16 +185,18 @@ Compute metacells in two settings:
     default parameters, but at the same set of genes as Super-cells
 
 ``` r
-SC.mc <- compute_supercells_metacells(
-  sc.counts = sc.counts, 
-  gamma.seq = .gamma.seq,
-  SC.list = SC.list,
-  proj.name = proj.name,
-  ToComputeSC = ToComputeSC, 
-  mc.k.knn = 100,
-  T_vm_def = 0.08,
-  MC.folder = "MC", 
-  MC_gene_settings = c('metacell_default', 'metacell_SC_like') # do not change
+invisible(
+  SC.mc <- compute_supercells_metacells(
+    sc.counts = sc.counts, 
+    gamma.seq = .gamma.seq,
+    SC.list = SC.list,
+    proj.name = proj.name,
+    ToComputeSC = ToComputeSC, 
+    mc.k.knn = 100,
+    T_vm_def = 0.08,
+    MC.folder = "MC", 
+    MC_gene_settings = c('metacell_default', 'metacell_SC_like') # do not change
+  )
 )
 ```
 
@@ -505,54 +253,6 @@ SC.mc <- compute_supercells_metacells(
 
     ## done resampling
 
-    ## filtered 379554 left with 153208 based on co-cluster imbalance
-
-    ## building metacell object, #mc 87
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs KRT81
-
-    ## [1] "min_mc_size 1"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 379554 left with 153208 based on co-cluster imbalance
-
-    ## building metacell object, #mc 87
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs KRT81
-
-    ## [1] "min_mc_size 1"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
     ## filtered 420498 left with 164711 based on co-cluster imbalance
 
     ## building metacell object, #mc 74
@@ -570,78 +270,6 @@ SC.mc <- compute_supercells_metacells(
     ## reorder on IFI27 vs AKR1B10
 
     ## [1] "min_mc_size 3"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 432803 left with 170010 based on co-cluster imbalance
-
-    ## building metacell object, #mc 66
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs AKR1B10
-
-    ## [1] "min_mc_size 4"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 432803 left with 170010 based on co-cluster imbalance
-
-    ## building metacell object, #mc 66
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs AKR1B10
-
-    ## [1] "min_mc_size 4"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 473321 left with 187723 based on co-cluster imbalance
-
-    ## building metacell object, #mc 58
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs KRT81
-
-    ## [1] "min_mc_size 8"
 
     ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
 
@@ -722,54 +350,6 @@ SC.mc <- compute_supercells_metacells(
 
     ## done resampling
 
-    ## filtered 422867 left with 160291 based on co-cluster imbalance
-
-    ## building metacell object, #mc 85
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on GPX2 vs IFITM3
-
-    ## [1] "min_mc_size 1"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 422867 left with 160291 based on co-cluster imbalance
-
-    ## building metacell object, #mc 85
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on GPX2 vs IFITM3
-
-    ## [1] "min_mc_size 1"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
     ## filtered 469880 left with 174233 based on co-cluster imbalance
 
     ## building metacell object, #mc 72
@@ -787,78 +367,6 @@ SC.mc <- compute_supercells_metacells(
     ## reorder on IFI27 vs CYP24A1
 
     ## [1] "min_mc_size 3"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 488185 left with 180369 based on co-cluster imbalance
-
-    ## building metacell object, #mc 64
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs ALDH1A1
-
-    ## [1] "min_mc_size 4"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 488185 left with 180369 based on co-cluster imbalance
-
-    ## building metacell object, #mc 64
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs ALDH1A1
-
-    ## [1] "min_mc_size 4"
-
-    ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
-
-    ## running bootstrap to generate cocluster
-
-    ## done resampling
-
-    ## filtered 540717 left with 201103 based on co-cluster imbalance
-
-    ## building metacell object, #mc 57
-
-    ## add batch counts
-
-    ## compute footprints
-
-    ## compute absolute ps
-
-    ## compute coverage ps
-
-    ## reordering metacells by hclust and most variable two markers
-
-    ## reorder on IFI27 vs KRT81
-
-    ## [1] "min_mc_size 8"
 
     ## comp mc graph using the graph Tian_cgraph_from_bknn and K 20
 
@@ -889,15 +397,15 @@ SC.mc <- compute_supercells_metacells(
 ``` r
 additional_gamma_seq <- get_actual_gammas_metacell(SC.mc)
 
-cat(paste("Metacells were computed in", length(names(SC.mc)), "settings:", paste(names(SC.mc), collapse = ", "), "\n",
-          "For Gammas:", paste(names(SC.mc[[1]]), collapse = ", "), "\n",
-          "But actual gammas are:", paste(additional_gamma_seq, collapse = ", "), "\n"
+cat(paste("Metacells were computed in", length(names(SC.mc)), "settings:", paste(names(SC.mc), collapse = ", "), 
+          "\nfor Gammas:", paste(names(SC.mc[[1]]), collapse = ", "), 
+          "\nbut actual gammas are:", paste(additional_gamma_seq, collapse = ", ")
 ))
 ```
 
     ## Metacells were computed in 2 settings: metacell_default, metacell_SC_like 
-    ##  For Gammas: 1, 2, 5, 10, 20, 50, 100, 200 
-    ##  But actual gammas are: 46, 54, 61, 69
+    ## for Gammas: 1, 10, 100 
+    ## but actual gammas are: 46, 54, 69
 
 ``` r
 # manually expand MC because later we will have 2 diferetn setting for MC profile: fp - footpring of MC, av - averaged 
@@ -926,13 +434,15 @@ So that we can dirrectly compare the results of Super-cells and
 Metacells at the same graining levels.
 
 ``` r
+filename <- paste0('additional_gammas', filename_suf)
+
 SC.list <- compute_supercells_additional_gammas(
   SC.list,
   additional_gamma_seq = additional_gamma_seq,
-  ToComputeSC = TRUE,
+  ToComputeSC = ToComputeSC,
   data.folder = data.folder,
-  filename = 'additional_gammas',
-  approx.N = 1000,
+  filename = filename,
+  approx.N = .approx.N,
   fast.pca = TRUE
 )
 ```
@@ -951,46 +461,6 @@ SC.list <- compute_supercells_additional_gammas(
     ## [1] "Approx"
     ## [1] "Random"
     ## [1] "Subsampling"
-    ## [1] "SEED: 42"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 7"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 559241"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 123"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 987"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 234"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 91"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 877"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 451"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 817"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
     ## [1] "GAMMMA: 54"
     ## [1] "Exact"
     ## [1] "SEED: 12345"
@@ -1002,100 +472,6 @@ SC.list <- compute_supercells_additional_gammas(
     ## [1] "Random"
     ## [1] "Subsampling"
     ## [1] "SEED: 19"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 42"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 7"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 559241"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 123"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 987"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 234"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 91"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 877"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 451"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 817"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "GAMMMA: 61"
-    ## [1] "Exact"
-    ## [1] "SEED: 12345"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 111"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 19"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 42"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 7"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 559241"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 123"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 987"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 234"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 91"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 877"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 451"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 817"
     ## [1] "Approx"
     ## [1] "Random"
     ## [1] "Subsampling"
@@ -1113,55 +489,16 @@ SC.list <- compute_supercells_additional_gammas(
     ## [1] "Approx"
     ## [1] "Random"
     ## [1] "Subsampling"
-    ## [1] "SEED: 42"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 7"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 559241"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 123"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 987"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 234"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 91"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 877"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 451"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
-    ## [1] "SEED: 817"
-    ## [1] "Approx"
-    ## [1] "Random"
-    ## [1] "Subsampling"
 
 ``` r
-print(paste("Super-cells of methods:", paste(names(SC.list), collapse = ", "), 
-      "were computed at aggitional graining levels:", paste(additional_gamma_seq, collapse = ", "), "
-      and added to SC.list"
+cat(paste("Super-cells of methods:", paste(names(SC.list), collapse = ", "), 
+      "were computed at aggitional graining levels:", paste(additional_gamma_seq, collapse = ", "), 
+      "\nand added to SC.list"
       ))
 ```
 
-    ## [1] "Super-cells of methods: Exact, Approx, Random, Subsampling were computed at aggitional graining levels: 46, 54, 61, 69 \n      and added to SC.list"
+    ## Super-cells of methods: Exact, Approx, Random, Subsampling were computed at aggitional graining levels: 46, 54, 69 
+    ## and added to SC.list
 
 ### Concatenate Metacells to the list of Super-cells
 
@@ -1176,6 +513,10 @@ names(SC.list)
 
 ``` r
 rm(SC.mc.expanded)
+
+filename <- paste0("all", filename_suf)
+
+saveRDS(SC.list, file = file.path(data.folder, "SC", paste0(filename, ".Rds")))
 ```
 
 Compute GE for Super-cell data
@@ -1190,19 +531,39 @@ gene expression within Metacells) -&gt; `metacell_(.*)_av` 2) using the
 default output of Metacell maned footprint -&gt; `metacell_(.*)_fp`
 
 ``` r
+filename <- paste("all", filename_suf)
+
 SC.GE.list <- compute_supercells_GE(
   sc.GE = sc.GE, 
   SC.list = SC.list,
   ToComputeSC_GE = ToComputeSC_GE, 
   data.folder = data.folder,
-  filename = 'all'
+  filename = filename
 )
 
 cat(paste("Gene expression profile computed for:", paste(names(SC.GE.list), collapse = ", "), 
     "\nat graining levels:", paste(sort(as.numeric(names(SC.GE.list[['Approx']]))), collapse = ", "),
-    "\nfor seeds:", paste(names(SC.GE.list[['Approx']][[1]]), collapse = ", ")))
+    "\nfor seeds:", paste(names(SC.GE.list[['Approx']][[1]]), collapse = ", "),
+    "\nand saved to / loaded from", paste0(filename, ".Rds")
+    ))
 ```
 
     ## Gene expression profile computed for: Exact, Approx, Random, Subsampling, metacell_default_fp, metacell_SC_like_fp, metacell_default_av, metacell_SC_like_av 
-    ## at graining levels: 1, 2, 5, 10, 20, 46, 50, 54, 61, 69, 100, 200 
-    ## for seeds: 12345, 111, 19, 42, 7, 559241, 123, 987, 234, 91, 877, 451, 817
+    ## at graining levels: 1, 10, 46, 54, 69, 100 
+    ## for seeds: 12345, 111, 19 
+    ## and saved to / loaded from all _testing_package.Rds
+
+#### Final
+
+``` r
+print("Done! Congrats!")
+```
+
+    ## [1] "Done! Congrats!"
+
+``` r
+warning(paste("(!) Script was run in a test mode, to get real cell_line super-cell data, run this script with ToTestPackage <- FALSE"))
+```
+
+    ## Warning: (!) Script was run in a test mode, to get real cell_line super-cell
+    ## data, run this script with ToTestPackage <- FALSE

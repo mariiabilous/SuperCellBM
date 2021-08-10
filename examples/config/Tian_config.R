@@ -16,6 +16,8 @@ fig.folder  <- file.path("examples", "plots", proj.name)
 .genes.omit         <- NULL
 .N.comp             <- 10
 
+.approx.N           <- 1000
+
 .k.knn              <- 5
 
 .SELECTED_METHODS   <- c("Exact", "Random", "Subsampling", "Metacell")
