@@ -25,7 +25,7 @@ SCimple2Metacell <- function(X, gamma, min_mc_size = NULL,  p_resamp = 0.75, n_r
   membership[present.cell.ids] <- mc$mc@mc
 
 
-  mc2d_name <- paste(mc$mc_name, "_2d")
+  mc2d_name <- paste0(mc$mc_name, "_2d")
 
 
   metacell::mcell_mc2d_force_knn(mc2d_id = mc2d_name,
