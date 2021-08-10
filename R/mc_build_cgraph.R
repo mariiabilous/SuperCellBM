@@ -37,7 +37,16 @@ require(metacell)
 #'  @return \code{project.name} -- \code{project.name} parameter
 #'
 #' @export
-mc_build_cgraph <- function(ge.mtrx, k.knn, genes.to.use = NULL, T_vm = -Inf, project_name = "metacell", balanced.Knn = TRUE, return.igraph = TRUE){
+mc_build_cgraph <- function(
+  ge.mtrx,
+  k.knn,
+  genes.to.use = NULL,
+  T_vm = -Inf,
+  project_name = "metacell",
+  balanced.Knn = TRUE,
+  return.igraph = TRUE,
+  verbose = FALSE
+){
 
   if(is.null(genes.to.use)){
       genes    <- rownames(ge.mtrx)
@@ -58,20 +67,20 @@ mc_build_cgraph <- function(ge.mtrx, k.knn, genes.to.use = NULL, T_vm = -Inf, pr
   mat_name <- project_name
   metacell::mcell_import_scmat_tsv(mat_nm = mat_name, fn = temp_filename_path, dset_nm = cell.ids)
   mat <- metacell::scdb_mat(mat_name)
-  print("import done")
+  if(verbose) print("import done")
 
   # create gene set (for this I have to run gene statistics and "filter" bad genes... although I keep all of them since they have been already filtered)
 
   gstat_name <- project_name
   metacell::mcell_add_gene_stat(gstat_id = gstat_name, mat_id = mat_name, force=T)
   gstat <- metacell::scdb_gstat(gstat_name)
-  print("gene stat done")
+  if(verbose) print("gene stat done")
 
   # feature (important genes) set (must be the same as )
   gset_name <- paste0(gstat_name, "_feats")
   metacell::mcell_gset_filter_varmean(gset_id = gset_name, gstat_id = gstat_name, T_vm=T_vm, force_new=T) # no filtering, but this function needed to initialize feats
   gset <- metacell::scdb_gset(gset_name)
-  print("gene set done")
+  if(verbose) print("gene set done")
 
   # build cell graph (cgraph) from raw or balanced kNN
   cgraph_name <- paste0(project_name, "_cgraph_from_", if(balanced.Knn){"bknn"} else {"rknn"})
@@ -93,7 +102,7 @@ mc_build_cgraph <- function(ge.mtrx, k.knn, genes.to.use = NULL, T_vm = -Inf, pr
   }
 
   cgraph <- metacell::scdb_cgraph(cgraph_name)
-  print("cgraph done")
+  if(verbose) print("cgraph done")
 
   res <- list(mat = mat, mat_name = mat_name,
               gstat = gstat, gstat_name = gstat_name,

@@ -11,7 +11,8 @@ compute_supercells_metacells <- function(
   mc.k.knn = 100,
   T_vm_def = 0.08,
   MC.folder = "MC",
-  MC_gene_settings = c('Metacell_default', 'Metacell_SC_like')
+  MC_gene_settings = c('Metacell_default', 'Metacell_SC_like'),
+  verbose = FALSE
 ){
 
   mc.bknn.list <- list()
@@ -42,7 +43,8 @@ compute_supercells_metacells <- function(
         T_vm = MC.T_vm,
         project_name = proj.name,
         balanced.Knn = T,
-        return.igraph = T)
+        return.igraph = T,
+        verbose = verbose)
 
       SC.mc[[MC_gene_setting]] <- list()
 
