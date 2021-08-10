@@ -8,28 +8,36 @@ output:
 
 An example how to build multiple super-cell-like objects, including 'exact' (Super-cells obtained with the exact coarse-gaining), 'approx' (Super-cells obtained with the aaproximate coarse-graining), 'metacell(.*)' (Metacell build on the same genes as super-cells -- 'metacell_SC_like'; and Metacell build in a default set of genes -- 'metacell_default') for a set of graining levels and random seeds.
 
-```{r libraries}
+```{r libraries, message=FALSE, warning=FALSE}
+# if (!requireNamespace("BiocManager", quietly = TRUE))
+#     install.packages("BiocManager")
+# 
+# BiocManager::install("SingleCellExperiment")
+# 
+# if (!requireNamespace("remotes")) install.packages("remotes")
+# remotes::install_github("GfellerLab/SuperCell")
+# remotes::install_github("mariiabilous/SuperCellBM")
+
 library(SingleCellExperiment)
 library(SuperCell)
 library(SuperCellBM)
 ```
 
-```{r config files}
-# some default parameters such as gamma.seq for the set of fraining levels, seed.seq for the set of random seeds, adata.folder and fig.folder for the folders where to write data and plots
-source("./examples/config/Tian_config.R")
-#source("./examples/config/config_color.R")
 
-.gamma.seq <- c(1, 10, 100)
-.seed.seq <- .seed.seq[1:2]
+## Load some default parameters
+Such as `.gamma.seq`for the set of fraining levels, `.seed.seq` for the set of random seeds, `adata.folder` and `fig.folder` for the folders where to write data and plots
+```{r config files}
+source("./examples/config/Tian_config.R")
 ```
 
-
+### Flags
+whether to compute super-cell (`ToComputeSC`) or whether to compute super-cell gene expression (`ToComputeSC_GE`) or load saved files. Make sure, this file exists :) 
 ```{r flags}
 ToComputeSC <- T
 ToComputeSC_GE <- T
 ```
 
-Load data from ref! ()
+##Load `cell_lines` data from \link[Tian et al., 2019](https://pubmed.ncbi.nlm.nih.gov/31133762/).
 ```{r load data }
 RData.file.path <- file.path(data.folder, 'cell_lines_git.RData')
 
@@ -78,17 +86,18 @@ names(GT.cell.type.2.num)   <- GT.cell.type.names
 GT.cell.type.num            <- GT.cell.type.2.num[GT.cell.type]
 names(GT.cell.type.num)     <- names(GT.cell.type)
 
+## uncomment this when needed 
 #.pal.GT <- .color.tsne.Tian  ## to Global Config
 #scales::show_col(.pal.GT)
 
 
-mito.genes <-  grep(pattern = "^MT", x = gene.names, value = TRUE)
-ribo.genes <-  grep(pattern = "^RP[LS]", x = gene.names, value = TRUE)
-mito.ribo.genes <- c(mito.genes, ribo.genes)
-length(mito.ribo.genes)
+#mito.genes <-  grep(pattern = "^MT", x = gene.names, value = TRUE)
+#ribo.genes <-  grep(pattern = "^RP[LS]", x = gene.names, value = TRUE)
+#mito.ribo.genes <- c(mito.genes, ribo.genes)
+#length(mito.ribo.genes)
 
-gene.meta <- data.frame(name = gene.names, inNcells = rowSums(sc.GE>0), mean.expr = rowMeans(sc.GE), sd = rowSds(sc.GE))
-head(gene.meta)
+#gene.meta <- data.frame(name = gene.names, inNcells = rowSums(sc.GE>0), mean.expr = rowMeans(sc.GE), sd = rowSds(sc.GE))
+#head(gene.meta)
 
 ```
 
