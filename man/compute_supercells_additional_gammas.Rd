@@ -11,7 +11,8 @@ compute_supercells_additional_gammas(
   data.folder = "./data",
   filename = "additional_gammas",
   approx.N = 1000,
-  fast.pca = TRUE
+  fast.pca = TRUE,
+  verbose = FALSE
 )
 }
 \arguments{

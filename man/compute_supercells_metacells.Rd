@@ -13,7 +13,8 @@ compute_supercells_metacells(
   mc.k.knn = 100,
   T_vm_def = 0.08,
   MC.folder = "MC",
-  MC_gene_settings = c("Metacell_default", "Metacell_SC_like")
+  MC_gene_settings = c("Metacell_default", "Metacell_SC_like"),
+  verbose = FALSE
 )
 }
 \arguments{

@@ -41,8 +41,8 @@ ToTestPackage <- T # @Loc, This is just to test whether package works (on reduce
 filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
 
 if(ToTestPackage){
-  testing_gamma_seq <- c(1, 10, 100)
-  testing_seed_seq <- .seed.seq[1:3]
+  testing_gamma_seq <- c(1)#, 10, 100)
+  testing_seed_seq <- .seed.seq[1]#[1:3]
   
   warning(paste("The reduced set of graining leveles and seeds will be used, to get real output, turn it ti FALSE"))
   warning(paste("Original set of graining levels is:", paste(.gamma.seq, collapse = ", "), 
@@ -144,8 +144,8 @@ SC.list <- compute_supercells(
   )
 
 cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "), 
-          "\nat graining levels:", paste(names(SC.list[['approx']]), collapse = ", "),
-          "\nfor seeds:", paste(names(SC.list[['approx']][[1]]), collapse = ", "), "\n",
+          "\nat graining levels:", paste(names(SC.list[['Approx']]), collapse = ", "),
+          "\nfor seeds:", paste(names(SC.list[['Approx']][[1]]), collapse = ", "), "\n",
           "\nand saved to / loaded from", paste0(filename, ".Rds")))
 ```
 
@@ -208,7 +208,7 @@ SC.list <- compute_supercells_additional_gammas(
 )
 
 cat(paste("Super-cells of methods:", paste(names(SC.list), collapse = ", "), 
-      "were computed at aggitional graining levels:", paste(additional_gamma_seq, collapse = ", "), 
+      "\nwere computed at aggitional graining levels:", paste(additional_gamma_seq, collapse = ", "), 
       "\nand added to SC.list"
       ))
 ```
@@ -218,22 +218,26 @@ cat(paste("Super-cells of methods:", paste(names(SC.list), collapse = ", "),
 ```{r concat super-cell and metacells}
 
 SC.list <- c(SC.list, SC.mc.expanded)
-names(SC.list)
 rm(SC.mc.expanded)
 
 filename <- paste0("all", filename_suf)
-
 saveRDS(SC.list, file = file.path(data.folder, "SC", paste0(filename, ".Rds")))
+
+cat(paste(
+  "Metacell data added to SC.list and now it contains:\n", paste(names(SC.list), collapse = ", "),
+  "SC.list was saved to", file.path(data.folder, "SC", paste0(filename, ".Rds"))
+))
 ```
 
 ## Compute GE for Super-cell data 
 GE profile for the super-cell data is computede:
+
 - for super-cells (Exact, Approx) by averaging gene expression within super-cells,
 - for Random, also averaging gene expression within super-cells 
 - for the Subsampling, sc.GE matrix is just subsampled,
 - for Metacells, gene expression is computed in 2 ways: 
-1) the same as super-cells (averaging gene expression within Metacells) -> `metacell_(.*)_av`
-2) using the default output of Metacell maned footprint -> `metacell_(.*)_fp`
+  1) the same as super-cells (averaging gene expression within Metacells) -> `metacell_(.*)_av`
+  2) using the default output of Metacell maned footprint -> `metacell_(.*)_fp`
 
 
 ```{r compute GE for all super cell like objects}
@@ -254,7 +258,7 @@ cat(paste("Gene expression profile computed for:", paste(names(SC.GE.list), coll
     ))
 ```
 #### Final
-```{r Final}
+```{r Final, echo=FALSE}
 print("Done! Congrats!")
 
 warning(paste("(!) Script was run in a test mode, to get real cell_line super-cell data, run this script with ToTestPackage <- FALSE"))

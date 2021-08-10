@@ -11,7 +11,8 @@ mc_build_cgraph(
   T_vm = -Inf,
   project_name = "metacell",
   balanced.Knn = TRUE,
-  return.igraph = TRUE
+  return.igraph = TRUE,
+  verbose = FALSE
 )
 }
 \description{
@@ -19,5 +20,25 @@ Builds cell object of Metacell package using UMI data. No gene filtering perform
  so either provide \code{ge.mtrx} as a UMI matrix with row containing only genes of interest or specify which genes to use via \code{genes.to.use}
 }
 \details{
+@param ge.mtrx UMI matrix with genes stored as rows, cells stored as cols
+ @param k.knn k-kearest neighbors parameter  (should  be large (~100) if cgraph is balanced)
+ @param genes.to.use vector of genes to use for building cgraph. If NULL (default), all the genes from \code{ge.mtrx} will be used
+ @param T_vm min variance of geness to keep for MC construction (default is -Inf - no MC gene filtering)
+ @param project_name used for storing and accessing .Rda files of Metacell output
+ @param balanced.Knn whether cgraph have to be computed using balanced kNN from Metacell package (keep k.knn large then (~100))
+ @param return.igraph whether to return igraph object of cgraph
 
+
+ @return \code{mat} -- mat object of \code{\link[metacell]{metacell}}
+ @return \code{mat_name} -- name of mat object
+ @return \code{gstat} -- gstat oject of \code{\link[metacell]{metacell}}
+ @return \code{gstat_name} -- name of gstat object
+ @return \code{gset} -- gset oject of \code{\link[metacell]{metacell}}
+ @return \code{gset_name} -- name of gset object
+ @return \code{cgraph} -- cgraph oject of \code{\link[metacell]{metacell}}
+ @return \code{cgraph_name} -- name of cgraph object '
+ @return \code{ograph} -- \code{igraph} object of cgraph (if return.igraph == TRUE)
+ @return \code{k.knn} -- \code{k.knn} input parameter
+ @return \code{balanced.Knn} -- \code{balanced.Knn} input parameter
+ @return \code{project.name} -- \code{project.name} parameter
 }

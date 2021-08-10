@@ -15,6 +15,22 @@ mc_build_mc(
 }
 \arguments{
 \item{X}{-- an output of \code{mc_build_cgraph}}
+
+\item{min_mc_size}{-- \code{min_mc_size} input parameter of \code{mcell_coclust_from_graph_resamp} and \code{mcell_mc_from_coclust_balanced} from \code{metacell}}
+
+\item{p_resamp}{-- \code{mcell_coclust_from_graph_resamp} input parameter of \code{mcell_coclust_from_graph_resamp} from \code{metacell}}
+
+\item{n_resamp}{-- \code{n_resamp} input param of \code{mcell_coclust_from_graph_resamp} from \code{metacell}
+ @param mc.K -- \code{mc.K} input parameter of \code{mcell_mc_from_coclust_balanced} from \code{metacell}
+ @param mc.alpha -- \code{mc.alpha} input parameter of \code{mcell_mc_from_coclust_balanced} from \code{metacell}
+
+ @return \code{coclust} --  coclust oject of \code{\link[metacell]{metacell}}
+ @return \code{coclust_name} -- name of coclust
+ @return \code{mc} --  mc oject of \code{\link[metacell]{metacell}}
+ @return \code{min_mc_size} -- \code{min_mc_size} input parameter
+ @return \code{p_resamp} -- \code{p_resamp} input parameter
+ @return \code{n_resamp} -- \code{n_resamp} input parameter
+ @return \code{mc.K} -- \code{mc.K} input parameter}
 }
 \description{
 Builds metacell partition using output of \code{mc_build_cgraph}

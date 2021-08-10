@@ -165,7 +165,7 @@ compute_supercells_additional_gammas <- function(
 
     for(gamma in additional_gamma_seq){
 
-      print(paste('GAMMMA:', gamma))
+      if(verbose) print(paste('GAMMMA:', gamma))
       gamma.ch <- as.character(gamma)
 
       SC.list[['Exact']][[gamma.ch]] = list()
@@ -189,7 +189,7 @@ compute_supercells_additional_gammas <- function(
         seed.i.ch = as.character(seed.i)
 
         ### Approx
-        print('Approx')
+        if(verbose) print('Approx')
         SC.list[['Approx']][[gamma.ch]][[seed.i.ch]] =  SuperCell::SCimplify(
           X = sc.GE,
           genes.use = genes.use,
@@ -207,7 +207,7 @@ compute_supercells_additional_gammas <- function(
         SC.list[['Random']][[gamma.ch]][[seed.i.ch]] <- SCimple2Random(SC = SC.list[['Exact']][[gamma.ch]][[1]],
                                                                        gamma = gamma,
                                                                        seed = seed.i)
-        print("Subsampling")
+        if(verbose) print("Subsampling")
         SC.list[['Subsampling']][[gamma.ch]][[seed.i.ch]] <- SCimple2Subsampling(X = sc.GE,
                                                                                  SC.list[['Exact']][[gamma.ch]][[1]],
                                                                                  gamma = gamma,

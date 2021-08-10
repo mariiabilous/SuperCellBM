@@ -17,7 +17,8 @@ compute_supercells(
   fast.pca = TRUE,
   genes.use = NULL,
   genes.exclude = NULL,
-  seed.seq = c(12345, 111, 19, 42, 7)
+  seed.seq = c(12345, 111, 19, 42, 7),
+  verbose = FALSE
 )
 }
 \arguments{

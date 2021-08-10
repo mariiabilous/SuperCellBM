@@ -1,8 +1,4 @@
 ###### write wrappers for metacell package: build balanced or raw knn graph (mc_build_cgraph), comute metacells (mc_build_mc) using output form mc_build_cgraph
-require(igraph)
-require(metacell)
-
-############### --------------- mc_build_mc -------------- ################
 
 #### Function implements several steps of metacell analysis:
 #### 1) creates sc matrix of metacell type
@@ -23,13 +19,13 @@ require(metacell)
 #'  @param return.igraph whether to return igraph object of cgraph
 #'
 #'
-#'  @return \code{mat} -- mat object of \code{\link[metacell]{metacell}
+#'  @return \code{mat} -- mat object of \code{\link[metacell]{metacell}}
 #'  @return \code{mat_name} -- name of mat object
-#'  @return \code{gstat} -- gstat oject of \code{\link[metacell]{metacell}
+#'  @return \code{gstat} -- gstat oject of \code{\link[metacell]{metacell}}
 #'  @return \code{gstat_name} -- name of gstat object
-#'  @return \code{gset} -- gset oject of \code{\link[metacell]{metacell}
+#'  @return \code{gset} -- gset oject of \code{\link[metacell]{metacell}}
 #'  @return \code{gset_name} -- name of gset object
-#'  @return \code{cgraph} -- cgraph oject of \code{\link[metacell]{metacell}
+#'  @return \code{cgraph} -- cgraph oject of \code{\link[metacell]{metacell}}
 #'  @return \code{cgraph_name} -- name of cgraph object '
 #'  @return \code{ograph} -- \code{igraph} object of cgraph (if return.igraph == TRUE)
 #'  @return \code{k.knn} -- \code{k.knn} input parameter
@@ -143,16 +139,15 @@ mc_build_cgraph <- function(
 #'  Builds metacell partition using output of \code{mc_build_cgraph}
 #'
 #' @param X -- an output of \code{mc_build_cgraph}
-#' @param min_mc_size -- \code{min_mc_size} input parameter of \code{mcell_coclust_from_graph_resamp} and
-#'  \code{mcell_mc_from_coclust_balanced} from \code{metacell}
-#'  @param p_resamp -- \code{mcell_coclust_from_graph_resamp} input parameter of \code{mcell_coclust_from_graph_resamp} from \code{metacell}
-#'  @param n_resamp -- \code{n_resamp} input param of \code{mcell_coclust_from_graph_resamp} from \code{metacell}
+#' @param min_mc_size -- \code{min_mc_size} input parameter of \code{mcell_coclust_from_graph_resamp} and \code{mcell_mc_from_coclust_balanced} from \code{metacell}
+#' @param p_resamp -- \code{mcell_coclust_from_graph_resamp} input parameter of \code{mcell_coclust_from_graph_resamp} from \code{metacell}
+#' @param n_resamp -- \code{n_resamp} input param of \code{mcell_coclust_from_graph_resamp} from \code{metacell}
 #'  @param mc.K -- \code{mc.K} input parameter of \code{mcell_mc_from_coclust_balanced} from \code{metacell}
 #'  @param mc.alpha -- \code{mc.alpha} input parameter of \code{mcell_mc_from_coclust_balanced} from \code{metacell}
 #'
-#'  @return \code{coclust} --  coclust oject of \code{\link[metacell]{metacell}
+#'  @return \code{coclust} --  coclust oject of \code{\link[metacell]{metacell}}
 #'  @return \code{coclust_name} -- name of coclust
-#'  @return \code{mc} --  mc oject of \code{\link[metacell]{metacell}
+#'  @return \code{mc} --  mc oject of \code{\link[metacell]{metacell}}
 #'  @return \code{min_mc_size} -- \code{min_mc_size} input parameter
 #'  @return \code{p_resamp} -- \code{p_resamp} input parameter
 #'  @return \code{n_resamp} -- \code{n_resamp} input parameter

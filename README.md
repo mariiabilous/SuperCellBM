@@ -46,8 +46,8 @@ ToTestPackage <- T # @Loc, This is just to test whether package works (on reduce
 filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
 
 if(ToTestPackage){
-  testing_gamma_seq <- c(1, 10, 100)
-  testing_seed_seq <- .seed.seq[1:3]
+  testing_gamma_seq <- c(1)#, 10, 100)
+  testing_seed_seq <- .seed.seq[1]#[1:3]
   
   warning(paste("The reduced set of graining leveles and seeds will be used, to get real output, turn it ti FALSE"))
   warning(paste("Original set of graining levels is:", paste(.gamma.seq, collapse = ", "), 
@@ -66,10 +66,10 @@ if(ToTestPackage){
     ## output, turn it ti FALSE
 
     ## Warning: Original set of graining levels is: 1, 2, 5, 10, 20, 50, 100, 200 but
-    ## used testing set is: 1, 10, 100
+    ## used testing set is: 1
 
     ## Warning: Original set of seeds is: 12345, 111, 19, 42, 7, 559241, 123, 987, 234,
-    ## 91, 877, 451, 817 but used testing set is: 12345, 111, 19
+    ## 91, 877, 451, 817 but used testing set is: 12345
 
 \#\#Load `cell_lines` data from
 (<a href="https://pubmed.ncbi.nlm.nih.gov/31133762/" class="uri">https://pubmed.ncbi.nlm.nih.gov/31133762/</a>).
@@ -165,14 +165,14 @@ SC.list <- compute_supercells(
   )
 
 cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "), 
-          "\nat graining levels:", paste(names(SC.list[['approx']]), collapse = ", "),
-          "\nfor seeds:", paste(names(SC.list[['approx']][[1]]), collapse = ", "), "\n",
+          "\nat graining levels:", paste(names(SC.list[['Approx']]), collapse = ", "),
+          "\nfor seeds:", paste(names(SC.list[['Approx']][[1]]), collapse = ", "), "\n",
           "\nand saved to / loaded from", paste0(filename, ".Rds")))
 ```
 
     ## Super-cell computed for: Exact, Approx, Random, Subsampling 
-    ## at graining levels:  
-    ## for seeds:  
+    ## at graining levels: 1 
+    ## for seeds: 12345 
     ##  
     ## and saved to / loaded from initial_testing_package.Rds
 
@@ -210,8 +210,8 @@ cat(paste("Metacells were computed in", length(names(SC.mc)), "settings:", paste
 ```
 
     ## Metacells were computed in 2 settings: metacell_default, metacell_SC_like 
-    ## for Gammas: 1, 10, 100 
-    ## but actual gammas are: 46, 54, 69
+    ## for Gammas: 1 
+    ## but actual gammas are: 46
 
 ``` r
 # manually expand MC because later we will have 2 diferetn setting for MC profile: fp - footpring of MC, av - averaged 
@@ -251,69 +251,49 @@ SC.list <- compute_supercells_additional_gammas(
   approx.N = .approx.N,
   fast.pca = TRUE
 )
-```
 
-    ## [1] "GAMMMA: 46"
-    ## [1] "Approx"
-    ## [1] "Subsampling"
-    ## [1] "Approx"
-    ## [1] "Subsampling"
-    ## [1] "Approx"
-    ## [1] "Subsampling"
-    ## [1] "GAMMMA: 54"
-    ## [1] "Approx"
-    ## [1] "Subsampling"
-    ## [1] "Approx"
-    ## [1] "Subsampling"
-    ## [1] "Approx"
-    ## [1] "Subsampling"
-    ## [1] "GAMMMA: 69"
-    ## [1] "Approx"
-    ## [1] "Subsampling"
-    ## [1] "Approx"
-    ## [1] "Subsampling"
-    ## [1] "Approx"
-    ## [1] "Subsampling"
-
-``` r
 cat(paste("Super-cells of methods:", paste(names(SC.list), collapse = ", "), 
-      "were computed at aggitional graining levels:", paste(additional_gamma_seq, collapse = ", "), 
+      "\nwere computed at aggitional graining levels:", paste(additional_gamma_seq, collapse = ", "), 
       "\nand added to SC.list"
       ))
 ```
 
-    ## Super-cells of methods: Exact, Approx, Random, Subsampling were computed at aggitional graining levels: 46, 54, 69 
+    ## Super-cells of methods: Exact, Approx, Random, Subsampling 
+    ## were computed at aggitional graining levels: 46 
     ## and added to SC.list
 
 ### Concatenate Metacells to the list of Super-cells
 
 ``` r
 SC.list <- c(SC.list, SC.mc.expanded)
-names(SC.list)
-```
-
-    ## [1] "Exact"               "Approx"              "Random"             
-    ## [4] "Subsampling"         "metacell_default_fp" "metacell_SC_like_fp"
-    ## [7] "metacell_default_av" "metacell_SC_like_av"
-
-``` r
 rm(SC.mc.expanded)
 
 filename <- paste0("all", filename_suf)
-
 saveRDS(SC.list, file = file.path(data.folder, "SC", paste0(filename, ".Rds")))
+
+cat(paste(
+  "Metacell data added to SC.list and now it contains:\n", paste(names(SC.list), collapse = ", "),
+  "SC.list was saved to", file.path(data.folder, "SC", paste0(filename, ".Rds"))
+))
 ```
+
+    ## Metacell data added to SC.list and now it contains:
+    ##  Exact, Approx, Random, Subsampling, metacell_default_fp, metacell_SC_like_fp, metacell_default_av, metacell_SC_like_av SC.list was saved to examples/data/Tian/SC/all_testing_package.Rds
 
 Compute GE for Super-cell data
 ------------------------------
 
-GE profile for the super-cell data is computede: - for super-cells
-(Exact, Approx) by averaging gene expression within super-cells, - for
-Random, also averaging gene expression within super-cells - for the
-Subsampling, sc.GE matrix is just subsampled, - for Metacells, gene
-expression is computed in 2 ways: 1) the same as super-cells (averaging
-gene expression within Metacells) -&gt; `metacell_(.*)_av` 2) using the
-default output of Metacell maned footprint -&gt; `metacell_(.*)_fp`
+GE profile for the super-cell data is computede:
+
+-   for super-cells (Exact, Approx) by averaging gene expression within
+    super-cells,
+-   for Random, also averaging gene expression within super-cells
+-   for the Subsampling, sc.GE matrix is just subsampled,
+-   for Metacells, gene expression is computed in 2 ways:
+    1.  the same as super-cells (averaging gene expression within
+        Metacells) -&gt; `metacell_(.*)_av`
+    2.  using the default output of Metacell maned footprint -&gt;
+        `metacell_(.*)_fp`
 
 ``` r
 filename <- paste("all", filename_suf)
@@ -334,21 +314,13 @@ cat(paste("Gene expression profile computed for:", paste(names(SC.GE.list), coll
 ```
 
     ## Gene expression profile computed for: Exact, Approx, Random, Subsampling, metacell_default_fp, metacell_SC_like_fp, metacell_default_av, metacell_SC_like_av 
-    ## at graining levels: 1, 10, 46, 54, 69, 100 
-    ## for seeds: 12345, 111, 19 
+    ## at graining levels: 1, 46 
+    ## for seeds: 12345 
     ## and saved to / loaded from all _testing_package.Rds
 
 #### Final
 
-``` r
-print("Done! Congrats!")
-```
-
     ## [1] "Done! Congrats!"
-
-``` r
-warning(paste("(!) Script was run in a test mode, to get real cell_line super-cell data, run this script with ToTestPackage <- FALSE"))
-```
 
     ## Warning: (!) Script was run in a test mode, to get real cell_line super-cell
     ## data, run this script with ToTestPackage <- FALSE
