@@ -25,7 +25,8 @@ Load some default parameters
 
 Such as `.gamma.seq`for the set of fraining levels, `.seed.seq` for the
 set of random seeds, `adata.folder` and `fig.folder` for the folders
-where to write data and plots
+where to write data and plots. For the full list of the default
+parameters, see `./examples/config/Tian_config.R`.
 
 ``` r
 source("./examples/config/Tian_config.R")
@@ -33,9 +34,12 @@ source("./examples/config/Tian_config.R")
 
 ### Flags
 
-whether to compute super-cell (`ToComputeSC`) or whether to compute
+Whether to compute super-cell (`ToComputeSC`) or whether to compute
 super-cell gene expression (`ToComputeSC_GE`) or load saved files. Make
-sure, this file exists :)
+sure, these file exists :) Flag `ToTestPackage` is used to run stript in
+2 modes: package testing (`ToTestPackage == TRUE`) or generating
+super-cell structure and super-cell gene expression for the further
+analyses (`ToTestPackage == FALSE`).
 
 ``` r
 ToComputeSC <- T
@@ -46,8 +50,8 @@ ToTestPackage <- T # @Loc, This is just to test whether package works (on reduce
 filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
 
 if(ToTestPackage){
-  testing_gamma_seq <- c(1)#, 10, 100)
-  testing_seed_seq <- .seed.seq[1]#[1:3]
+  testing_gamma_seq <- c(1, 10, 100)
+  testing_seed_seq <- .seed.seq[1:3]
   
   warning(paste("The reduced set of graining leveles and seeds will be used, to get real output, turn it ti FALSE"))
   warning(paste("Original set of graining levels is:", paste(.gamma.seq, collapse = ", "), 
@@ -66,13 +70,13 @@ if(ToTestPackage){
     ## output, turn it ti FALSE
 
     ## Warning: Original set of graining levels is: 1, 2, 5, 10, 20, 50, 100, 200 but
-    ## used testing set is: 1
+    ## used testing set is: 1, 10, 100
 
     ## Warning: Original set of seeds is: 12345, 111, 19, 42, 7, 559241, 123, 987, 234,
-    ## 91, 877, 451, 817 but used testing set is: 12345
+    ## 91, 877, 451, 817 but used testing set is: 12345, 111, 19
 
-\#\#Load `cell_lines` data from
-(<a href="https://pubmed.ncbi.nlm.nih.gov/31133762/" class="uri">https://pubmed.ncbi.nlm.nih.gov/31133762/</a>).
+Load `cell_lines` data from [Tian et al., 2019](https://pubmed.ncbi.nlm.nih.gov/31133762/).
+-------------------------------------------------------------------------------------------
 
 ``` r
 RData.file.path <- file.path(data.folder, 'cell_lines_git.RData')
@@ -95,7 +99,7 @@ rm(sc_Celseq2_5cl_p1, sc_Celseq2_5cl_p2, sc_Celseq2_5cl_p3, sce_sc_10x_5cl_qc)
 Get and set the main variables, such as single-cell gene expression
 (`sc.GE`), single-cell counts (`sc.counts`), number of single cells
 (`N.c`) and total number of genes (`N.g`). Set matrix column names to
-cellIDs (`cell.ids`) and row names to gene names (`gene.names`)
+cellIDs (`cell.ids`) and row names to gene names (`gene.names`).
 
 ``` r
 cell.ids     <- cell_lines_SCE@colData@rownames
@@ -143,7 +147,7 @@ Compute Super-cells structure
 
 for the Exact, Aprox (Super-cells obtained with the exact or approximate
 coarse-graining), Subsampling or Random (random grouping of cells into
-super-cells)
+super-cells).
 
 ``` r
 filename <- paste0('initial', filename_suf)
@@ -171,8 +175,8 @@ cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "),
 ```
 
     ## Super-cell computed for: Exact, Approx, Random, Subsampling 
-    ## at graining levels: 1 
-    ## for seeds: 12345 
+    ## at graining levels: 1, 10, 100 
+    ## for seeds: 12345, 111, 19 
     ##  
     ## and saved to / loaded from initial_testing_package.Rds
 
@@ -210,11 +214,11 @@ cat(paste("Metacells were computed in", length(names(SC.mc)), "settings:", paste
 ```
 
     ## Metacells were computed in 2 settings: metacell_default, metacell_SC_like 
-    ## for Gammas: 1 
-    ## but actual gammas are: 46
+    ## for Gammas: 1, 10, 100 
+    ## but actual gammas are: 46, 54, 69
 
 ``` r
-# manually expand MC because later we will have 2 diferetn setting for MC profile: fp - footpring of MC, av - averaged 
+# manually expand MC because later we will have 2 different setting for MC profile: fp - footpring of MC, av - averaged 
 SC.mc.fp <- SC.mc
 names(SC.mc.fp) <- sapply(names(SC.mc), FUN = function(x){paste0(x, '_fp')})
 
@@ -259,7 +263,7 @@ cat(paste("Super-cells of methods:", paste(names(SC.list), collapse = ", "),
 ```
 
     ## Super-cells of methods: Exact, Approx, Random, Subsampling 
-    ## were computed at aggitional graining levels: 46 
+    ## were computed at aggitional graining levels: 46, 54, 69 
     ## and added to SC.list
 
 ### Concatenate Metacells to the list of Super-cells
@@ -272,13 +276,15 @@ filename <- paste0("all", filename_suf)
 saveRDS(SC.list, file = file.path(data.folder, "SC", paste0(filename, ".Rds")))
 
 cat(paste(
-  "Metacell data added to SC.list and now it contains:\n", paste(names(SC.list), collapse = ", "),
-  "SC.list was saved to", file.path(data.folder, "SC", paste0(filename, ".Rds"))
+  "Metacell data added to SC.list \nand now it contains:",
+  paste(names(SC.list), collapse = ", "),
+  "\nSC.list was saved to", file.path(data.folder, "SC", paste0(filename, ".Rds"))
 ))
 ```
 
-    ## Metacell data added to SC.list and now it contains:
-    ##  Exact, Approx, Random, Subsampling, metacell_default_fp, metacell_SC_like_fp, metacell_default_av, metacell_SC_like_av SC.list was saved to examples/data/Tian/SC/all_testing_package.Rds
+    ## Metacell data added to SC.list 
+    ## and now it contains: Exact, Approx, Random, Subsampling, metacell_default_fp, metacell_SC_like_fp, metacell_default_av, metacell_SC_like_av 
+    ## SC.list was saved to examples/data/Tian/SC/all_testing_package.Rds
 
 Compute GE for Super-cell data
 ------------------------------
@@ -314,8 +320,8 @@ cat(paste("Gene expression profile computed for:", paste(names(SC.GE.list), coll
 ```
 
     ## Gene expression profile computed for: Exact, Approx, Random, Subsampling, metacell_default_fp, metacell_SC_like_fp, metacell_default_av, metacell_SC_like_av 
-    ## at graining levels: 1, 46 
-    ## for seeds: 12345 
+    ## at graining levels: 1, 10, 46, 54, 69, 100 
+    ## for seeds: 12345, 111, 19 
     ## and saved to / loaded from all _testing_package.Rds
 
 #### Final
