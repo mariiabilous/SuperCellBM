@@ -56,33 +56,19 @@ compute_supercells <- function(
 
     for(gamma in gamma.seq){
 
-      if(verbose) print(paste('GAMMMA:', gamma))
-      gamma.ch <- as.character(gamma)
+      if(gamma > 1) {
 
-      SC.list[['Exact']][[gamma.ch]] = list()
-      SC.list[['Approx']][[gamma.ch]] = list()
-      SC.list[['Random']][[gamma.ch]] = list()
-      SC.list[['Subsampling']][[gamma.ch]] = list()
+        if(verbose) print(paste('GAMMMA:', gamma))
+        gamma.ch <- as.character(gamma)
 
-      ### Exact -- thi one can be replaced with rescaling for gamma > gamma.seq[1]
-      if(verbose) print('Exact')
-      SC.list[['Exact']][[gamma.ch]][[as.character(seed.seq[1])]] = SuperCell::SCimplify(
-        X = sc.GE,
-        genes.use = genes.use,
-        genes.exclude = genes.exclude,
-        n.var.genes = n.var.genes,
-        k.knn = k.knn,
-        gamma = gamma,
-        n.pc = n.pc,
-        fast.pca = fast.pca)
+        SC.list[['Exact']][[gamma.ch]] = list()
+        SC.list[['Approx']][[gamma.ch]] = list()
+        SC.list[['Random']][[gamma.ch]] = list()
+        SC.list[['Subsampling']][[gamma.ch]] = list()
 
-      for(seed.i in seed.seq){
-        if(verbose) print(paste('SEED:', seed.i))
-        seed.i.ch = as.character(seed.i)
-
-        ### Approx
-        if(verbose) print('Approx')
-        SC.list[['Approx']][[gamma.ch]][[seed.i.ch]] =  SuperCell::SCimplify(
+        ### Exact -- thi one can be replaced with rescaling for gamma > gamma.seq[1]
+        if(verbose) print('Exact')
+        SC.list[['Exact']][[gamma.ch]][[as.character(seed.seq[1])]] = SuperCell::SCimplify(
           X = sc.GE,
           genes.use = genes.use,
           genes.exclude = genes.exclude,
@@ -90,24 +76,41 @@ compute_supercells <- function(
           k.knn = k.knn,
           gamma = gamma,
           n.pc = n.pc,
-          fast.pca = fast.pca,
-          do.approx = TRUE,
-          seed = seed.i,
-          approx.N = approx.N)
+          fast.pca = fast.pca)
 
-        ### Random
-        if(verbose) print("Random")
-        SC.list[['Random']][[gamma.ch]][[seed.i.ch]] <- SCimple2Random(SC = SC.list[['Exact']][[gamma.ch]][[1]],
-                                                                       gamma = gamma,
-                                                                       seed = seed.i)
-        if(verbose) print("Subsampling")
-        SC.list[['Subsampling']][[gamma.ch]][[seed.i.ch]] <- SCimple2Subsampling(X = sc.GE,
-                                                                                 SC.list[['Exact']][[gamma.ch]][[1]],
-                                                                                 gamma = gamma,
-                                                                                 seed = seed.i)
+        for(seed.i in seed.seq){
+          if(verbose) print(paste('SEED:', seed.i))
+          seed.i.ch = as.character(seed.i)
+
+          ### Approx
+          if(verbose) print('Approx')
+          SC.list[['Approx']][[gamma.ch]][[seed.i.ch]] =  SuperCell::SCimplify(
+            X = sc.GE,
+            genes.use = genes.use,
+            genes.exclude = genes.exclude,
+            n.var.genes = n.var.genes,
+            k.knn = k.knn,
+            gamma = gamma,
+            n.pc = n.pc,
+            fast.pca = fast.pca,
+            do.approx = TRUE,
+            seed = seed.i,
+            approx.N = approx.N)
+
+          ### Random
+          if(verbose) print("Random")
+          SC.list[['Random']][[gamma.ch]][[seed.i.ch]] <- SCimple2Random(SC = SC.list[['Exact']][[gamma.ch]][[1]],
+                                                                         gamma = gamma,
+                                                                         seed = seed.i)
+          if(verbose) print("Subsampling")
+          SC.list[['Subsampling']][[gamma.ch]][[seed.i.ch]] <- SCimple2Subsampling(X = sc.GE,
+                                                                                   SC.list[['Exact']][[gamma.ch]][[1]],
+                                                                                   gamma = gamma,
+                                                                                   seed = seed.i)
+
+        }
 
       }
-
     }
 
 
@@ -231,4 +234,105 @@ compute_supercells_additional_gammas <- function(
   return(SC.list)
 
 }
+
+
+#' Computed super-cells for the additional seeds and concatenates the results to the existing ones
+#'
+#' The same parameters as in \code{\link{compute_supercells()}}, with 2 exceptions
+#'
+#' @param SC.list output of \code{\link{compute_supercells()}} (i.e., list of super-cells in a format \code{"SC.list[['SC_method']][[gamma_i]][[seed_i]]"})
+#' @param additional_seed_seq vector of aggitional gammas for which SC has to be computed
+#'
+#' @return apdated list of super-cells with additional gammas
+
+compute_supercells_additional_seeds <- function(
+  SC.list,
+  additional_seed_seq,
+  ToComputeSC,
+  data.folder = './data',
+  filename = 'additional_seeds',
+  approx.N = 1000,
+  fast.pca = TRUE,
+  verbose = FALSE
+){
+
+  filepath = file.path(data.folder, 'SC')
+  filename = paste0(filename, '.Rds')
+
+  genes.use <- SC.list[[1]][[1]][[1]]$genes.use
+  n.var.genes <- length(genes.use) # redundant when `genes.use` provided
+  n.pc      <- SC.list[[1]][[1]][[1]]$n.pc
+  k.knn     <- SC.list[[1]][[1]][[1]]$k.knn
+
+  seeds_old <- as.numeric(names(SC.list[['Approx']][[1]]))
+  gamma_seq <- as.numeric(names(SC.list[[1]]))
+
+  if(length(intersect(seeds_old, additional_seed_seq)) > 0){
+    common_seeds <- intersect(seeds_old, additional_seed_seq)
+    warning(paste("Seeds(s):", paste(common_seeds, collapse = ","), "already computed. No recalculation will be done!"))
+    additional_seed_seq <- setdiff(additional_seed_seq, common_seeds)
+  }
+
+  if(ToComputeSC){
+
+    for(gamma in gamma_seq){
+
+      if(verbose) print(paste('GAMMMA:', gamma))
+      gamma.ch <- as.character(gamma)
+
+      SC.list[['Exact']][[gamma.ch]] = list()
+      SC.list[['Approx']][[gamma.ch]] = list()
+      SC.list[['Random']][[gamma.ch]] = list()
+      SC.list[['Subsampling']][[gamma.ch]] = list()
+
+      ### Exact -- thi one can be replaced with rescaling for gamma > gamma.seq[1]
+
+      for(seed.i in additional_seed_seq){
+        if(verbose) print(paste('SEED:', seed.i))
+        seed.i.ch = as.character(seed.i)
+
+        ### Approx
+        if(verbose) print('Approx')
+        SC.list[['Approx']][[gamma.ch]][[seed.i.ch]] =  SuperCell::SCimplify(
+          X = sc.GE,
+          genes.use = genes.use,
+          n.var.genes = n.var.genes,
+          k.knn = k.knn,
+          gamma = gamma,
+          n.pc = n.pc,
+          fast.pca = fast.pca,
+          do.approx = TRUE,
+          seed = seed.i,
+          approx.N = approx.N)
+
+        ### Random
+        if(verbose) print("Random")
+        SC.list[['Random']][[gamma.ch]][[seed.i.ch]] <- SCimple2Random(SC = SC.list[['Exact']][[gamma.ch]][[1]],
+                                                                       gamma = gamma,
+                                                                       seed = seed.i)
+        if(verbose) print("Subsampling")
+        SC.list[['Subsampling']][[gamma.ch]][[seed.i.ch]] <- SCimple2Subsampling(X = sc.GE,
+                                                                                 SC.list[['Exact']][[gamma.ch]][[1]],
+                                                                                 gamma = gamma,
+                                                                                 seed = seed.i)
+
+      }
+
+    }
+
+
+    if(!dir.exists(filepath)){
+      dir.create(filepath)
+    }
+
+    saveRDS(SC.list, file = file.path(filepath, filename))
+
+  } else {
+    SC.list <- readRDS(file = file.path(filepath, filename))
+  }
+
+  return(SC.list)
+
+}
+
 
