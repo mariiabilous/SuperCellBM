@@ -241,9 +241,9 @@ compute_supercells_additional_gammas <- function(
 #' The same parameters as in \code{\link{compute_supercells()}}, with 2 exceptions
 #'
 #' @param SC.list output of \code{\link{compute_supercells()}} (i.e., list of super-cells in a format \code{"SC.list[['SC_method']][[gamma_i]][[seed_i]]"})
-#' @param additional_seed_seq vector of aggitional gammas for which SC has to be computed
+#' @param additional_seed_seq vector of aggitional seeds for which SC has to be computed
 #'
-#' @return apdated list of super-cells with additional gammas
+#' @return apdated list of super-cells with additional seeds
 
 compute_supercells_additional_seeds <- function(
   SC.list,
