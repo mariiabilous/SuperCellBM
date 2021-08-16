@@ -18,8 +18,17 @@ compute_supercells_metacells <- function(
   mc.bknn.list <- list()
   SC.mc <- list()
 
-  SC.gene.used = SC.list[[1]][[1]][[1]]$genes.use
-  seed.ch = names(SC.list[[1]][[1]])
+  gamma.seq.SC <- as.numeric(names(SC.list[[1]]))
+
+  if(setdiff(gamma.seq, gamma.seq.SC)){
+    abscent_gammas <- setdiff(gamma.seq, gamma.seq.SC)
+    warning(paste("Some gammas in gamma.seq:", paste(abscent_gammas, collapse = ", "),
+                  "not found in SC.list, Metacell for these gammas will not be computed!"))
+    gamma.seq <- intersect(gamma.seq, gamma.seq.SC)
+  }
+
+  SC.gene.used <- SC.list[[1]][[1]][[1]]$genes.use
+  seed.ch <- names(SC.list[[1]][[1]])
 
   for(MC_gene_setting in MC_gene_settings){
     mc.dir <- file.path(data.folder, MC.folder, MC_gene_setting)
