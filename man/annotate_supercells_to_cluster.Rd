@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotate_supercells_to_clusters.R
 \name{annotate_supercells_to_cluster}
 \alias{annotate_supercells_to_cluster}
-\title{Computes annotation of super-cell types based on the annotation of single cells}
+\title{Computes annotation of super-cell types based on the annotation of single cells and purity of super-cell}
 \usage{
 annotate_supercells_to_cluster(
   SC.list,
@@ -27,5 +27,5 @@ annotate_supercells_to_cluster(
 SC.list with each super-cell element containing additional field \code{annotation.name} that contains super-cell annotation
 }
 \description{
-Runs \code{\link[SuperCell]{supercell_assign}} for all super-cell elements in SC.list (output of \code{compute_supercells})
+Runs \code{\link[SuperCell]{supercell_assign}} and \code{\link[SuperCell]{supercell_purity}} for all super-cell elements in SC.list (output of \code{compute_supercells})
 }
