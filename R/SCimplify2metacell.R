@@ -63,7 +63,7 @@ SCimple2Metacell <- function(X, gamma, min_mc_size = NULL,  p_resamp = 0.75, n_r
               simplification.algo   = "Metacell",
               gamma                 = gamma,
 
-              gamma.actual          = N.c/length(table(mc$mc@mc)),
+              gamma.actual          = round(N.c/length(table(mc$mc@mc))),
               cells.use.ids         = names(mc$mc@mc),
               cells.use.idx         = pmatch(names(mc$mc@mc), mc$mc@cell_names),
               mc2d_name             = mc2d_name,
