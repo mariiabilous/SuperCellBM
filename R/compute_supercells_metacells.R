@@ -28,7 +28,7 @@ compute_supercells_metacells <- function(
 
       init_mc(mc.dir = mc.dir)
 
-      if(MC_gene_setting == 'metacell_default'){
+      if(MC_gene_setting == 'Metacell_default'){
         MC.genes.to.use <- NULL
         MC.T_vm <- T_vm_def
       } else {
@@ -68,7 +68,7 @@ compute_supercells_metacells <- function(
   return(SC.mc)
 }
 
-
+SC.list$Exact$`5`$`12345`
 #' returns list of actual gammas of metacells
 #'
 #' @param SC.mc the output of \code{\link{compute_supercells_metacells}}

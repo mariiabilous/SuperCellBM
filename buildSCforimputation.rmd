@@ -1,0 +1,123 @@
+```{r}
+library(SingleCellExperiment)
+library(SuperCell)
+library(SuperCellBM)
+```
+
+```{r config files}
+source("./examples/config/Tian_config.R")
+```
+
+```{r flags}
+ToComputeSC <- T
+ToComputeSC_GE <- T
+
+ToTestPackage <- F # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
+
+filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
+
+if(ToTestPackage){
+  testing_gamma_seq <- c(1, 10, 100)
+  testing_seed_seq <- .seed.seq[1:3]
+  
+  warning(paste("The reduced set of graining leveles and seeds will be used, to get real output, turn it ti FALSE"))
+  warning(paste("Original set of graining levels is:", paste(.gamma.seq, collapse = ", "), 
+                "but used testing set is:", paste(testing_gamma_seq, collapse = ", ")))
+  warning(paste("Original set of seeds  is:", paste(.seed.seq, collapse = ", "), 
+                "but used testing set is:", paste(testing_seed_seq, collapse = ", ")))
+  
+  .gamma.seq <- testing_gamma_seq
+  .seed.seq <- testing_seed_seq
+  
+  filename_suf = "_testing_package"
+}
+```
+
+## Get and set the main variables
+
+Such as single-cell gene expression (`sc.GE`), single-cell counts (`sc.counts`), 
+number of single cells (`N.c`) and total number of genes (`N.g`).
+Set matrix column names to cellIDs (`cell.ids`) and row names to gene names (`gene.names`).
+```{r get main values from the dataset}
+preprocessed <- readRDS("~/switchdrive/Institution/CCB/superimpute/output/2021-08-18/object/preprocessed.Rds")
+sc.counts <- preprocessed$sc_counts
+sc.GE <- preprocessed$sc_GE
+
+## this is not needed at this point, but will be used later
+GT.cell.type <- preprocessed$sc_celllines
+names(GT.cell.type) <- colnames(sc.counts)
+N.clusters         <- length(unique(GT.cell.type))
+
+GT.cell.type.names          <- names(table(GT.cell.type))
+GT.cell.type.2.num          <- 1:length(unique(GT.cell.type))
+names(GT.cell.type.2.num)   <- GT.cell.type.names
+GT.cell.type.num            <- GT.cell.type.2.num[GT.cell.type]
+names(GT.cell.type.num)     <- names(GT.cell.type)
+```
+
+
+
+## Compute Super-cells structure
+for the Exact, Aprox (Super-cells obtained with the exact or approximate coarse-graining), Subsampling or Random (random grouping of cells into super-cells).
+
+```{r compute super-cell structure, message=FALSE, warning=FALSE}
+filename <- paste0('initial', filename_suf)
+
+SC.list <- compute_supercells(
+  sc.GE,
+  ToComputeSC = ToComputeSC,
+  data.folder = data.folder,
+  filename = filename,
+  gamma.seq = c(1, 5, 10, 50, 100),
+  n.var.genes = .N.var.genes,
+  k.knn = .k.knn,
+  n.pc = .N.comp,
+  approx.N = .approx.N,
+  fast.pca = TRUE,
+  genes.use = .genes.use, 
+  genes.exclude = .genes.omit,
+  seed.seq = .seed.seq[1]
+  )
+
+cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "), 
+          "\nat graining levels:", paste(names(SC.list[['Approx']]), collapse = ", "),
+          "\nfor seeds:", paste(names(SC.list[['Approx']][[1]]), collapse = ", "), "\n",
+          "\nand saved to / loaded from", paste0(filename, ".Rds")))
+```
+
+## Compute metacells in two settings:
+- 'metacell_default' - when metacell is computed with the default parameters (from the tutorial), using gene set filtered by MC
+- 'metacell_SC_like' - when metacell is computed with the same default parameters, but at the same set of genes as Super-cells 
+
+```{r compute metacells, results='hide', message=FALSE}
+SC.mc <- compute_supercells_metacells(
+  sc.counts = sc.counts, 
+  gamma.seq = c(1),
+  SC.list = SC.list,
+  proj.name = proj.name,
+  ToComputeSC = TRUE, 
+  mc.k.knn = 100,
+  T_vm_def = 0.08,
+  MC.folder = "MC", 
+  MC_gene_settings = c('metacell_default', 'metacell_SC_like') # do not change
+)
+```
+
+```{r compute GE for all super cell like objects}
+filename <- paste("all", filename_suf)
+
+SC.GE.list <- compute_supercells_GE(
+  sc.GE = sc.GE, 
+  SC.list = SC.list,
+  ToComputeSC_GE = ToComputeSC_GE, 
+  data.folder = data.folder,
+  filename = filename
+)
+
+cat(paste("Gene expression profile computed for:", paste(names(SC.GE.list), collapse = ", "), 
+    "\nat graining levels:", paste(sort(as.numeric(names(SC.GE.list[['Approx']]))), collapse = ", "),
+    "\nfor seeds:", paste(names(SC.GE.list[['Approx']][[1]]), collapse = ", "),
+    "\nand saved to / loaded from", paste0(filename, ".Rds")
+    ))
+```
+

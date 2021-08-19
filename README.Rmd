@@ -38,7 +38,7 @@ Flag `ToTestPackage` is used to run stript in 2 modes: package testing (`ToTestP
 ToComputeSC <- T
 ToComputeSC_GE <- T
 
-ToTestPackage <- T # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
+ToTestPackage <- F # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
 
 filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
 
