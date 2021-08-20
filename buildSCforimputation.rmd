@@ -9,33 +9,18 @@ source("./examples/config/Tian_config.R")
 ```
 
 ```{r flags}
-# ToComputeSC <- T
-# ToComputeSC_GE <- T
-# 
-# ToTestPackage <- F # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
-# 
-# filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
-# 
-# if(ToTestPackage){
-#   testing_gamma_seq <- c(1, 10, 100)
-#   testing_seed_seq <- .seed.seq[1:3]
-#   
-#   warning(paste("The reduced set of graining leveles and seeds will be used, to get real output, turn it ti FALSE"))
-#   warning(paste("Original set of graining levels is:", paste(.gamma.seq, collapse = ", "), 
-#                 "but used testing set is:", paste(testing_gamma_seq, collapse = ", ")))
-#   warning(paste("Original set of seeds  is:", paste(.seed.seq, collapse = ", "), 
-#                 "but used testing set is:", paste(testing_seed_seq, collapse = ", ")))
-#   
-#   .gamma.seq <- testing_gamma_seq
-#   .seed.seq <- testing_seed_seq
-#   
-#   filename_suf = "_testing_package"
-# }
+ToComputeSC <- T
+ToComputeSC_GE <- T
+
+ToTestPackage <- F # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
+
+filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
 ```
 # Set gamma
 ```{r}
-gamma.seq.mc <- c(1, 2, 3, 4, 5)
+gamma.seq.mc <- c(1, 2, 3, 4, 5, 6, 10)
 gamma.seq <- c(1, 2, 5, 10, 20, 50, 100)
+seed.seq <- .seed.seq[1:3]
 ```
 
 
@@ -149,6 +134,7 @@ rm(SC.mc.fp, SC.mc.av, SC.mc)
 Save metacell results
 ```{r}
 saveRDS(SC.mc.expanded, "./output/MC_for_imputation.rds")
+saveRDS(SC.list, "./output/SC_for_imputation.rds")
 ```
 
 

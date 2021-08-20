@@ -50,7 +50,9 @@ mc_build_cgraph <- function(
       genes    <- genes.to.use[genes.to.use %in% rownames(ge.mtrx)]
   }
 
-  ge.mtrx = ge.mtrx[genes,]
+
+  
+  #ge.mtrx = ge.mtrx[genes,]
   # save GE data into .tsv file in order to provide yts path into load (mcell_import_scmat_tsv) function
   temp_filename      <- "ge_mtrx.tsv"
   temp_filename_path <- paste0(tempdir(), "/", temp_filename)
@@ -73,9 +75,25 @@ mc_build_cgraph <- function(
   if(verbose) print("gene stat done")
 
   # feature (important genes) set (must be the same as )
+  
+  #metacell::mcell_gset_filter_varmean(gset_id = gset_name, gstat_id = gstat_name, T_vm=T_vm, force_new=T) # no filtering, but this function needed to initialize feats
+  #gset <- metacell::scdb_gset(gset_name)
+  
   gset_name <- paste0(gstat_name, "_feats")
-  metacell::mcell_gset_filter_varmean(gset_id = gset_name, gstat_id = gstat_name, T_vm=T_vm, force_new=T) # no filtering, but this function needed to initialize feats
-  gset <- metacell::scdb_gset(gset_name)
+  if (!is.null(genes.to.use)){
+    metacell::mcell_gset_filter_varmean(gset_id = gset_name, gstat_id = gstat_name, T_vm=Inf, force_new=T) # no filtering, but this function needed to initialize feats
+    metacell::mcell_gset_add_gene(gset_id = gset_name, genes, subset_id = 1)
+    metacell::mcell_gset_filter_cov(gset_id = gset_name, gstat_id=gstat_name, T_tot=100, T_top3=2)
+    gset <- metacell::scdb_gset(gset_name)
+    print("gene set done")
+  } else {
+    metacell::mcell_gset_filter_varmean(gset_id = gset_name, gstat_id = gstat_name, T_vm=T_vm, force_new=T) # no filtering, but this function needed to initialize feats
+    metacell::mcell_gset_filter_cov(gset_id = gset_name, gstat_id=gstat_name, T_tot=100, T_top3=2)
+    gset <- metacell::scdb_gset(gset_name)
+    print("gene set done")
+  }
+  
+  
   if(verbose) print("gene set done")
 
   # build cell graph (cgraph) from raw or balanced kNN
