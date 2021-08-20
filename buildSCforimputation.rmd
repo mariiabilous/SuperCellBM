@@ -9,32 +9,37 @@ source("./examples/config/Tian_config.R")
 ```
 
 ```{r flags}
-ToComputeSC <- T
-ToComputeSC_GE <- T
-
-ToTestPackage <- F # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
-
-filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
-
-if(ToTestPackage){
-  testing_gamma_seq <- c(1, 10, 100)
-  testing_seed_seq <- .seed.seq[1:3]
-  
-  warning(paste("The reduced set of graining leveles and seeds will be used, to get real output, turn it ti FALSE"))
-  warning(paste("Original set of graining levels is:", paste(.gamma.seq, collapse = ", "), 
-                "but used testing set is:", paste(testing_gamma_seq, collapse = ", ")))
-  warning(paste("Original set of seeds  is:", paste(.seed.seq, collapse = ", "), 
-                "but used testing set is:", paste(testing_seed_seq, collapse = ", ")))
-  
-  .gamma.seq <- testing_gamma_seq
-  .seed.seq <- testing_seed_seq
-  
-  filename_suf = "_testing_package"
-}
+# ToComputeSC <- T
+# ToComputeSC_GE <- T
+# 
+# ToTestPackage <- F # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
+# 
+# filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
+# 
+# if(ToTestPackage){
+#   testing_gamma_seq <- c(1, 10, 100)
+#   testing_seed_seq <- .seed.seq[1:3]
+#   
+#   warning(paste("The reduced set of graining leveles and seeds will be used, to get real output, turn it ti FALSE"))
+#   warning(paste("Original set of graining levels is:", paste(.gamma.seq, collapse = ", "), 
+#                 "but used testing set is:", paste(testing_gamma_seq, collapse = ", ")))
+#   warning(paste("Original set of seeds  is:", paste(.seed.seq, collapse = ", "), 
+#                 "but used testing set is:", paste(testing_seed_seq, collapse = ", ")))
+#   
+#   .gamma.seq <- testing_gamma_seq
+#   .seed.seq <- testing_seed_seq
+#   
+#   filename_suf = "_testing_package"
+# }
+```
+# Set gamma
+```{r}
+gamma.seq.mc <- c(1, 2, 3, 4, 5)
+gamma.seq <- c(1, 2, 5, 10, 20, 50, 100)
 ```
 
-## Get and set the main variables
 
+## Get and set the main variables
 Such as single-cell gene expression (`sc.GE`), single-cell counts (`sc.counts`), 
 number of single cells (`N.c`) and total number of genes (`N.g`).
 Set matrix column names to cellIDs (`cell.ids`) and row names to gene names (`gene.names`).
@@ -68,7 +73,7 @@ SC.list <- compute_supercells(
   ToComputeSC = ToComputeSC,
   data.folder = data.folder,
   filename = filename,
-  gamma.seq = c(1, 5, 10, 50, 100),
+  gamma.seq = gamma.seq,
   n.var.genes = .N.var.genes,
   k.knn = .k.knn,
   n.pc = .N.comp,
@@ -92,7 +97,7 @@ cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "),
 ```{r compute metacells, results='hide', message=FALSE}
 SC.mc <- compute_supercells_metacells(
   sc.counts = sc.counts, 
-  gamma.seq = c(1),
+  gamma.seq = gamma.seq.mc,
   SC.list = SC.list,
   proj.name = proj.name,
   ToComputeSC = TRUE, 
@@ -103,21 +108,47 @@ SC.mc <- compute_supercells_metacells(
 )
 ```
 
-```{r compute GE for all super cell like objects}
-filename <- paste("all", filename_suf)
+### Get actual graining levels obtained with Metacell
+```{r get actual graining levels obtained with metacell}
+additional_gamma_seq <- get_actual_gammas_metacell(SC.mc)
 
-SC.GE.list <- compute_supercells_GE(
-  sc.GE = sc.GE, 
-  SC.list = SC.list,
-  ToComputeSC_GE = ToComputeSC_GE, 
-  data.folder = data.folder,
-  filename = filename
-)
+cat(paste("Metacells were computed in", length(names(SC.mc)), "settings:", paste(names(SC.mc), collapse = ", "), 
+          "\nfor Gammas:", paste(names(SC.mc[[1]]), collapse = ", "), 
+          "\nbut actual gammas are:", paste(additional_gamma_seq, collapse = ", ")
+))
 
-cat(paste("Gene expression profile computed for:", paste(names(SC.GE.list), collapse = ", "), 
-    "\nat graining levels:", paste(sort(as.numeric(names(SC.GE.list[['Approx']]))), collapse = ", "),
-    "\nfor seeds:", paste(names(SC.GE.list[['Approx']][[1]]), collapse = ", "),
-    "\nand saved to / loaded from", paste0(filename, ".Rds")
-    ))
+
+# manually expand MC because later we will have 2 different setting for MC profile: fp - footpring of MC, av - averaged 
+SC.mc.fp <- SC.mc
+names(SC.mc.fp) <- sapply(names(SC.mc), FUN = function(x){paste0(x, '_fp')})
+
+SC.mc.av <- SC.mc
+names(SC.mc.av) <- sapply(names(SC.mc), FUN = function(x){paste0(x, '_av')})
+
+SC.mc.expanded <- c(SC.mc.fp, SC.mc.av)
+
+names(SC.mc.expanded)
+rm(SC.mc.fp, SC.mc.av, SC.mc)
 ```
+
+### Concatenate Metacells to the list of Super-cells
+
+```{r concat super-cell and metacells}
+# SC.list <- c(SC.list, SC.mc.expanded)
+# rm(SC.mc.expanded)
+# 
+# filename <- paste0("all", filename_suf)
+# saveRDS(SC.list, file = file.path(data.folder, "SC", paste0(filename, ".Rds")))
+# 
+# cat(paste(
+#   "Metacell data added to SC.list \nand now it contains:",
+#   paste(names(SC.list), collapse = ", "),
+#   "\nSC.list was saved to", file.path(data.folder, "SC", paste0(filename, ".Rds"))
+# ))
+```
+Save metacell results
+```{r}
+saveRDS(SC.mc.expanded, "./output/MC_for_imputation.rds")
+```
+
 

@@ -11,7 +11,7 @@ compute_supercells_metacells <- function(
   mc.k.knn = 100,
   T_vm_def = 0.08,
   MC.folder = "MC",
-  MC_gene_settings = c('Metacell_default', 'Metacell_SC_like'),
+  MC_gene_settings = c('metacell_default', 'metacell_SC_like'),
   verbose = FALSE
 ){
 
@@ -28,7 +28,7 @@ compute_supercells_metacells <- function(
 
       init_mc(mc.dir = mc.dir)
 
-      if(MC_gene_setting == 'Metacell_default'){
+      if(MC_gene_setting == 'metacell_default'){
         MC.genes.to.use <- NULL
         MC.T_vm <- T_vm_def
       } else {
@@ -56,7 +56,7 @@ compute_supercells_metacells <- function(
         SC.mc[[MC_gene_setting]][[gamma.ch]][[seed.ch]] <- SCimple2Metacell(
           X = mc.bknn.list[[MC_gene_setting]],
           gamma = gamma,
-          min_mc_size = min(SC.list[['Exact']][[gamma.ch]][[1]]$supercell_size))
+          min_mc_size = gamma)
       }
 
       SC.mc_save <- SC.mc[[MC_gene_setting]]
