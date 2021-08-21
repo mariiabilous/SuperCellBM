@@ -232,6 +232,34 @@ cat(paste(
 ))
 ```
 
+## Annotate super-cells to the cell lines based on the cell line annotation of single-cell and compute super-cell purity in terms of this annotation 
+```{r annotate super-cell}
+SC.list <- annotate_supercells_to_cluster(
+  SC.list = SC.list,
+  sc.annotation = GT.cell.type, 
+  annotation.name = 'cell_line'
+  )
+```
+
+```{r plot super-cell purity in terms of cell-line annotation}
+purity.df <- plot_purity(
+  SC.list, 
+  annotation.name = 'cell_line'
+  )
+```
+
+
+```{r}
+table(purity.df$Gamma_actual)
+```
+```{r}
+library(ggplot2)
+
+ggplot(purity.df, aes(x = factor(Gamma_actual), y = Purity, color = Method, alpha = factor(Seed))) + 
+  geom_boxplot() 
+```
+
+
 ## Compute GE for Super-cell data 
 GE profile for the super-cell data is computede:
 

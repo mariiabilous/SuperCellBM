@@ -27,7 +27,7 @@ compute_supercells_GE <- function(
   gamma.seq <- as.numeric(names(SC.list[[1]]))
   seed.seq <- as.numeric(names(SC.list[['approx']][[1]]))
 
-  metacell_fp_names = grep('^metacell_(.*)_fp', names(SC.list), value = TRUE)
+  metacell_fp_names = grep('^Metacell_(.*)_fp', names(SC.list), value = TRUE)
 
   if(ToComputeSC_GE){
     for(SC.meth in SC.methods){

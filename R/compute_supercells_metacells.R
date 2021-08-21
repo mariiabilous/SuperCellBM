@@ -37,12 +37,12 @@ compute_supercells_metacells <- function(
 
       init_mc(mc.dir = mc.dir)
 
-      if(MC_gene_setting == 'metacell_default'){
+      if(MC_gene_setting == 'Metacell_default'){
         MC.genes.to.use <- NULL
         MC.T_vm <- T_vm_def
       } else {
         MC.genes.to.use <- SC.gene.used
-        MC.T_vm <- -Inf
+        MC.T_vm <- +Inf #filter out all the genes in order to manually add SC.gene.used
       }
 
       mc.bknn.list[[MC_gene_setting]]  <- mc_build_cgraph(
@@ -98,5 +98,5 @@ get_actual_gammas_metacell <- function(
     }
   }
 
-  return(round(sort(unique(unlist(gamma_actual[[mc_type]])))))
+  return(round(sort(unique(unlist(gamma_actual)))))
 }
