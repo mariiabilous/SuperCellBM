@@ -26,7 +26,7 @@ SCimple2Subsampling <- function(X, SC, gamma, seed = 12345){
 
 
 
-  X.for.pca               <- scale(t(X))
+  X.for.pca               <- scale(Matrix::t(X))
   if(N.SC > 100){
    PCA          <- irlba::irlba(X.for.pca, nv = max(n.pc))
    PCA$x        <- PCA$u %*% diag(PCA$d)

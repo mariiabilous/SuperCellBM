@@ -9,12 +9,12 @@
 #' @param ToComputeSC a bool flag to indicate whether to compute super-cells (if TRUE) or load (if FALSE) (if was previously computed and saved)
 #' @param filename filename to save/load the resulting list of super-cells
 #' @param data.folder path to the data folder of a certain analysis, usualy in a format './data/project_name/'
-#' @param n.var.genes \code{"n.var.genes"} parameter of SuperCell function \code{\link[SuperCell]{SCimplify()}}
-#' @param k.knn \code{"k.knn"} parameter of SuperCell function \code{\link[SuperCell]{SCimplify()}}
-#' @param n.pc \code{"n.pc"} parameter of SuperCell function \code{\link[SuperCell]{SCimplify()}}, can be a number, then 1:n.pc PC will be used to compute super-cells or a specific vector of PC to use (e.g., 2:15, c(2, 5, 6, 19))
-#' @param approx.N \code{"approx.N"} parameter of SuperCell function \code{\link[SuperCell]{SCimplify()}}
+#' @param n.var.genes \code{"n.var.genes"} parameter of SuperCell function \link[SuperCell]{SCimplify}
+#' @param k.knn \code{"k.knn"} parameter of SuperCell function \link[SuperCell]{SCimplify}
+#' @param n.pc \code{"n.pc"} parameter of SuperCell function \link[SuperCell]{SCimplify}, can be a number, then 1:n.pc PC will be used to compute super-cells or a specific vector of PC to use (e.g., 2:15, c(2, 5, 6, 19))
+#' @param approx.N \code{"approx.N"} parameter of SuperCell function \link[SuperCell]{SCimplify}
 #' @param fast.pca whethre to use fast PCA implementation from ilbra package (default TRUE)
-#' @param genes.use \code{"genes.use"} parameter of SuperCell function \code{\link[SuperCell]{SCimplify()}}. A specific genes set to use for computing super-cells, if provided, then parameter \code{"n.var.genes"} will be omitted, if not provided, top \code{"n.var.genes"} most variable genes will be used
+#' @param genes.use \code{"genes.use"} parameter of SuperCell function \link[SuperCell]{SCimplify}. A specific genes set to use for computing super-cells, if provided, then parameter \code{"n.var.genes"} will be omitted, if not provided, top \code{"n.var.genes"} most variable genes will be used
 #' @param genes.exclude genes exclude from the gene set used for the computation of super-cells (e.g., a vector containing mito genes or ribo genes)
 #' @param seed.seq a vector of Random seeds (used for the Approximate coarse-graining, Subsampling and Random grouping)
 #'
@@ -129,9 +129,9 @@ compute_supercells <- function(
 
 #' Computed super-cells for the additional gamma as concatenates the results to the existing ones
 #'
-#' The same parameters as in \code{\link{compute_supercells()}}, with 2 exceptions
+#' The same parameters as in \link{compute_supercells}, with 2 exceptions
 #'
-#' @param SC.list output of \code{\link{compute_supercells()}} (i.e., list of super-cells in a format \code{"SC.list[['SC_method']][[gamma_i]][[seed_i]]"})
+#' @param SC.list output of \link{compute_supercells()} (i.e., list of super-cells in a format \code{"SC.list[['SC_method']][[gamma_i]][[seed_i]]"})
 #' @param additional_gamma_seq vector of aggitional gammas for which SC has to be computed
 #'
 #' @return apdated list of super-cells with additional gammas
@@ -238,9 +238,9 @@ compute_supercells_additional_gammas <- function(
 
 #' Computed super-cells for the additional seeds and concatenates the results to the existing ones
 #'
-#' The same parameters as in \code{\link{compute_supercells()}}, with 2 exceptions
+#' The same parameters as in \link{compute_supercells}, with 2 exceptions
 #'
-#' @param SC.list output of \code{\link{compute_supercells()}} (i.e., list of super-cells in a format \code{"SC.list[['SC_method']][[gamma_i]][[seed_i]]"})
+#' @param SC.list output of \link{compute_supercells} (i.e., list of super-cells in a format \code{"SC.list[['SC_method']][[gamma_i]][[seed_i]]"})
 #' @param additional_seed_seq vector of aggitional seeds for which SC has to be computed
 #'
 #' @return apdated list of super-cells with additional seeds

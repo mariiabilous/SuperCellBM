@@ -51,10 +51,16 @@ compute_supercells_GE <- function(
           switch (switcher,
 
                   normal = {
+                    if("cells.use.idx" %in% names(SC.list[[SC.meth]][[gamma.ch]][[seed.i.ch]])){
+                      cur.idx = SC.list[[SC.meth]][[gamma.ch]][[seed.i.ch]]$cells.use.idx
+                    } else {
+                      cur.idx <- 1:length(SC.list[[SC.meth]][[gamma.ch]][[seed.i.ch]]$membership)
+                    }
+
                     SC.GE.list[[SC.meth]][[gamma.ch]][[seed.i.ch]] <-
                       supercell_GE(
-                        ge = sc.GE,
-                        groups = SC.list[[SC.meth]][[gamma.ch]][[seed.i.ch]]$membership
+                        ge = sc.GE[,cur.idx],
+                        groups = SC.list[[SC.meth]][[gamma.ch]][[seed.i.ch]]$membership[cur.idx]
                       )
                   },
 

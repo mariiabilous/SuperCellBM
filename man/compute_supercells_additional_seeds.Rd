@@ -16,7 +16,7 @@ compute_supercells_additional_seeds(
 )
 }
 \arguments{
-\item{SC.list}{output of \code{\link{compute_supercells()}} (i.e., list of super-cells in a format \code{"SC.list[['SC_method']][[gamma_i]][[seed_i]]"})}
+\item{SC.list}{output of \link{compute_supercells} (i.e., list of super-cells in a format \code{"SC.list[['SC_method']][[gamma_i]][[seed_i]]"})}
 
 \item{additional_seed_seq}{vector of aggitional seeds for which SC has to be computed}
 }
@@ -24,5 +24,5 @@ compute_supercells_additional_seeds(
 apdated list of super-cells with additional seeds
 }
 \description{
-The same parameters as in \code{\link{compute_supercells()}}, with 2 exceptions
+The same parameters as in \link{compute_supercells}, with 2 exceptions
 }

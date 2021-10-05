@@ -32,17 +32,17 @@ compute_supercells(
 
 \item{data.folder}{path to the data folder of a certain analysis, usualy in a format './data/project_name/'}
 
-\item{n.var.genes}{\code{"n.var.genes"} parameter of SuperCell function \code{\link[SuperCell]{SCimplify()}}}
+\item{n.var.genes}{\code{"n.var.genes"} parameter of SuperCell function \link[SuperCell]{SCimplify}}
 
-\item{k.knn}{\code{"k.knn"} parameter of SuperCell function \code{\link[SuperCell]{SCimplify()}}}
+\item{k.knn}{\code{"k.knn"} parameter of SuperCell function \link[SuperCell]{SCimplify}}
 
-\item{n.pc}{\code{"n.pc"} parameter of SuperCell function \code{\link[SuperCell]{SCimplify()}}, can be a number, then 1:n.pc PC will be used to compute super-cells or a specific vector of PC to use (e.g., 2:15, c(2, 5, 6, 19))}
+\item{n.pc}{\code{"n.pc"} parameter of SuperCell function \link[SuperCell]{SCimplify}, can be a number, then 1:n.pc PC will be used to compute super-cells or a specific vector of PC to use (e.g., 2:15, c(2, 5, 6, 19))}
 
-\item{approx.N}{\code{"approx.N"} parameter of SuperCell function \code{\link[SuperCell]{SCimplify()}}}
+\item{approx.N}{\code{"approx.N"} parameter of SuperCell function \link[SuperCell]{SCimplify}}
 
 \item{fast.pca}{whethre to use fast PCA implementation from ilbra package (default TRUE)}
 
-\item{genes.use}{\code{"genes.use"} parameter of SuperCell function \code{\link[SuperCell]{SCimplify()}}. A specific genes set to use for computing super-cells, if provided, then parameter \code{"n.var.genes"} will be omitted, if not provided, top \code{"n.var.genes"} most variable genes will be used}
+\item{genes.use}{\code{"genes.use"} parameter of SuperCell function \link[SuperCell]{SCimplify}. A specific genes set to use for computing super-cells, if provided, then parameter \code{"n.var.genes"} will be omitted, if not provided, top \code{"n.var.genes"} most variable genes will be used}
 
 \item{genes.exclude}{genes exclude from the gene set used for the computation of super-cells (e.g., a vector containing mito genes or ribo genes)}
 

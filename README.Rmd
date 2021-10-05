@@ -28,17 +28,17 @@ library(SuperCellBM)
 Such as `.gamma.seq`for the set of fraining levels, `.seed.seq` for the set of random seeds, `adata.folder` and `fig.folder` for the folders where to write data and plots.
 For the full list of the default parameters, see `./examples/config/Tian_config.R`.
 ```{r config files}
-source("./examples/config/Tian_config.R")
+source("./examples/config/cell_lines_config.R")
 ```
 
 ### Flags
 Whether to compute super-cell (`ToComputeSC`) or whether to compute super-cell gene expression (`ToComputeSC_GE`) or load saved files. Make sure, these file exists :) 
 Flag `ToTestPackage` is used to run stript in 2 modes: package testing (`ToTestPackage == TRUE`) or generating super-cell structure and super-cell gene expression for the further analyses (`ToTestPackage == FALSE`).
 ```{r flags}
-ToComputeSC <- T
-ToComputeSC_GE <- T
+ToComputeSC <- F
+ToComputeSC_GE <- F 
 
-ToTestPackage <- T # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
+ToTestPackage <- F # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
 
 filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
 
@@ -56,6 +56,8 @@ if(ToTestPackage){
   .seed.seq <- testing_seed_seq
   
   filename_suf = "_testing_package"
+} else {
+  .seed.seq = .seed.seq[1:5]
 }
 ```
 
@@ -166,7 +168,7 @@ SC.mc <- compute_supercells_metacells(
   mc.k.knn = 100,
   T_vm_def = 0.08,
   MC.folder = "MC", 
-  MC_gene_settings = c('metacell_default', 'metacell_SC_like') # do not change
+  MC_gene_settings = c('Metacell_default', 'Metacell_SC_like') # do not change
 )
 ```
 
@@ -241,22 +243,12 @@ SC.list <- annotate_supercells_to_cluster(
   )
 ```
 
-```{r plot super-cell purity in terms of cell-line annotation}
-purity.df <- plot_purity(
+```{r plot super-cell purity in terms of cell-line annotation, message=FALSE, warning=FALSE}
+purity.df <- plot_annotation_purity(
   SC.list, 
-  annotation.name = 'cell_line'
+  annotation.name = 'cell_line', w = 2.5, h = 2.5,
   )
-```
 
-
-```{r}
-table(purity.df$Gamma_actual)
-```
-```{r}
-library(ggplot2)
-
-ggplot(purity.df, aes(x = factor(Gamma_actual), y = Purity, color = Method, alpha = factor(Seed))) + 
-  geom_boxplot() 
 ```
 
 
@@ -272,7 +264,7 @@ GE profile for the super-cell data is computede:
 
 
 ```{r compute GE for all super cell like objects}
-filename <- paste("all", filename_suf)
+filename <- paste0("all", filename_suf)
 
 SC.GE.list <- compute_supercells_GE(
   sc.GE = sc.GE, 
@@ -288,11 +280,105 @@ cat(paste("Gene expression profile computed for:", paste(names(SC.GE.list), coll
     "\nand saved to / loaded from", paste0(filename, ".Rds")
     ))
 ```
+
+```{r}
+dim(SC.GE.list$Metacell_SC_like_fp$`100`$`12345`)
+dim(SC.list$Metacell_default_fp$`100`$`12345`$mc_info$mc@mc_fp)
+
+dim(SC.GE.list$Exact$`100`$`12345`)
+dim(SC.list$Metacell_default_av$`100`$`12345`$mc_info$mc@mc_fp)
+```
+
+## Dimensionality reduction of Super-cell data
+```{r}
+SC.list <- compute_supercells_PCA(
+  SC.list = SC.list,
+  SC.GE.list = SC.GE.list,
+  N.comp = .N.comp
+)
+
+saveRDS(SC.list, file = file.path(data.folder, 'SC', 'all_PCA.Rds'))
+```
+
+```{r}
+SC.list <- readRDS(file.path(data.folder, 'SC', 'all_PCA.Rds'))
+```
+
+
+
+## Clustering 
+```{r super-cell clustering}
+SC.list <- compute_supercells_clustering(
+  SC.list,
+  N.comp = 10,
+  N.clusters.seq = c(2:10),
+  pca_name = 'SC_PCA'
+)
+```
+
+```{r single-cell clustering}
+genes.use <- SC.list$Exact$`2`$`12345`$genes.use
+if(length(.N.comp) == 1) {N.comp <- 1:.N.comp} else {N.comp <- .N.comp}
+
+sc.pca <- prcomp(t(sc.GE[genes.use,]), scale. = T, center = T)
+sc.dist <- dist(sc.pca$x[,N.comp])
+sc.clustering <- hclust(sc.dist, method = "ward.D2")
+sc.clustering <- cutree(sc.clustering, k = length(unique(GT.cell.type)))
+
+```
+
+
+```{r}
+devtools::document()
+devtools::install()
+
+detach('package:SuperCellBM', unload = TRUE)
+library(SuperCellBM)
+```
+
+```{r}
+alt.clusterings <- compute_alternative_clustering(
+  sc.pca = sc.pca$x,
+  N.comp = .N.comp,
+  N.clusters.seq = .N.clusters.seq,
+  seed.seq = .seed.seq
+)
+```
+
+
+### Consistency between super-cell clustering and cell lines
+```{r}
+clust.consistency <- compute_consistency_of_supercell_clustering(
+  SC.list = SC.list, 
+  sc.annotation = GT.cell.type, 
+  sc.clustering = sc.clustering,
+  sc.alternative.clustering = alt.clusterings
+)
+```
+```{r, warning=FALSE, message=FALSE}
+clust.consistency_summary <- plot_clustering_consistency(
+  clust.consistency, 
+  min.value.alt.clustering = 0.5,
+  error_bars = "sd"
+)
+clust.consistency_summary
+```
+
+
+```{r}
+set.seed(123)
+supercell_plot(SC.list.pca$Exact$`20`$`12345`$graph.supercells)
+```
+
+
+
 #### Final
 ```{r Final, echo=FALSE}
 print("Done! Congrats!")
 
-warning(paste("(!) Script was run in a test mode, to get real cell_line super-cell data, run this script with ToTestPackage <- FALSE"))
+if(ToTestPackage){
+  warning(paste("(!) Script was run in a test mode, to get real cell_line super-cell data, run this script with ToTestPackage <- FALSE"))
+}
 
 ```
 
