@@ -3,6 +3,7 @@
 .Rhistory
 *.RData
 *.Rdata
+*.Rda
 *.Rds
 *.RDS
 *.RDs

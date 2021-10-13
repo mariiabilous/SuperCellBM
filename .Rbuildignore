@@ -5,3 +5,5 @@
 ^examples$
 ^examples/data$
 ^plots/*$
+^.Rproj.user
+^\.git$
