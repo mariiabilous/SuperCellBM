@@ -1,5 +1,5 @@
 ---
-title: "SuperCellBM (SuperCell benchmarking)"
+title: "Super-cell analysis of Tcells (from Zheng et al., 2018)"
 csl: elsevier-harvard.csl
 output:
   md_document:
@@ -28,17 +28,19 @@ library(SuperCellBM)
 Such as `.gamma.seq`for the set of fraining levels, `.seed.seq` for the set of random seeds, `adata.folder` and `fig.folder` for the folders where to write data and plots.
 For the full list of the default parameters, see `./examples/config/Tian_config.R`.
 ```{r config files}
-source("./examples/config/cell_lines_config.R")
+source("./config/Tcells_config.R")
 ```
 
 ### Flags
 Whether to compute super-cell (`ToComputeSC`) or whether to compute super-cell gene expression (`ToComputeSC_GE`) or load saved files. Make sure, these file exists :) 
 Flag `ToTestPackage` is used to run stript in 2 modes: package testing (`ToTestPackage == TRUE`) or generating super-cell structure and super-cell gene expression for the further analyses (`ToTestPackage == FALSE`).
 ```{r flags}
-ToComputeSC <- F
-ToComputeSC_GE <- F 
+ToLoadPreprocData <- T
+ToComputeSC       <- F
+ToComputeSC_GE    <- F 
+ToClusterSinglecell <- F
 
-ToTestPackage <- F # @Loc, This is just to test whether package works (on reduced set of graining levels and seeds, turn it to FALSE to get real data @ all grainig levels and seeds)
+ToTestPackage     <- F 
 
 filename_suf <- "" # variable to add a suffix to the saved files in case of testing of the package
 
@@ -61,68 +63,54 @@ if(ToTestPackage){
 }
 ```
 
-## Load `cell_lines` data from [Tian et al., 2019](https://pubmed.ncbi.nlm.nih.gov/31133762/).
-```{r load data }
-RData.file.path <- file.path(data.folder, 'cell_lines_git.RData')
+## Load `Tcells` data from [10x Genomics database](link to 10x Genomics).
 
-if(!file.exists(RData.file.path)){
-  if(!dir.exists(data.folder)) dir.create(data.folder, recursive = T)
-  download.file('https://github.com/LuyiTian/sc_mixology/blob/master/data/sincell_with_class_5cl.RData?raw=true', 
-                RData.file.path)
+```{r load data}
+
+if(!ToLoadPreprocData){
+  source("./config/Tcells_load_data.R")
+} else {
+  sc.GE      <- readRDS(file = file.path(data.folder, "sc_ge.Rds"))
+  sc.counts  <- readRDS(file = file.path(data.folder, "sc_counts.Rds"))
+  cell.meta  <- readRDS(file = file.path(data.folder, "cell_meta.Rds"))
 }
 
-load(RData.file.path)
 
-# keep used dataset 
-cell_lines_SCE <- sce_sc_10x_5cl_qc
-
-#remove not-used datasets
-rm(sc_Celseq2_5cl_p1, sc_Celseq2_5cl_p2, sc_Celseq2_5cl_p3, sce_sc_10x_5cl_qc)
 ```
 
 Get and set the main variables, such as single-cell gene expression (`sc.GE`), single-cell counts (`sc.counts`), 
 number of single cells (`N.c`) and total number of genes (`N.g`).
 Set matrix column names to cellIDs (`cell.ids`) and row names to gene names (`gene.names`).
 ```{r get main values from the dataset}
-cell.ids     <- cell_lines_SCE@colData@rownames
-N.c          <- cell_lines_SCE@colData@nrows 
 
+GT.cell.type                <- cell.meta$GT.cell.type
+names(GT.cell.type)         <- rownames(cell.meta)
 
-gene.names   <- cell_lines_SCE@int_elementMetadata$external_gene_name
-N.g          <- length(gene.names)
-
-sc.GE           <- cell_lines_SCE@assays$data$logcounts
-colnames(sc.GE) <- cell.ids
-rownames(sc.GE) <- gene.names
-
-sc.counts   <- cell_lines_SCE@assays$data$counts
-colnames(sc.counts) <- cell.ids
-rownames(sc.counts) <- gene.names
-
-## this is not needed at this point, but will be used later
-GT.cell.type <- cell_lines_SCE@colData$cell_line_demuxlet
-names(GT.cell.type) <- cell.ids
-N.clusters         <- length(unique(GT.cell.type))
-
-GT.cell.type.names          <- names(table(GT.cell.type))
+GT.cell.type.names          <- names(table(cell.meta$GT.cell.type))
 GT.cell.type.2.num          <- 1:length(unique(GT.cell.type))
 names(GT.cell.type.2.num)   <- GT.cell.type.names
 GT.cell.type.num            <- GT.cell.type.2.num[GT.cell.type]
 names(GT.cell.type.num)     <- names(GT.cell.type)
 
+cell.ids                    <- colnames(sc.GE)
+N.c                         <- length(cell.ids)
+gene.names                  <- rownames(sc.GE)
+N.g                         <- length(gene.names)
+
+N.clusters                  <- length(unique(GT.cell.type))
+
+mito.genes                  <- grep(pattern = "^MT",     x = gene.names, value = TRUE)
+ribo.genes                  <- grep(pattern = "^RP[LS]", x = gene.names, value = TRUE)
+mito.ribo.genes             <- c(mito.genes, ribo.genes)
+length(mito.ribo.genes)
+.genes.omit                  <- mito.ribo.genes
+
+
 ## uncomment this when needed 
-#.pal.GT <- .color.tsne.Tian  ## to Global Config
-#scales::show_col(.pal.GT)
 
-
-#mito.genes <-  grep(pattern = "^MT", x = gene.names, value = TRUE)
-#ribo.genes <-  grep(pattern = "^RP[LS]", x = gene.names, value = TRUE)
-#mito.ribo.genes <- c(mito.genes, ribo.genes)
-#length(mito.ribo.genes)
-
-#gene.meta <- data.frame(name = gene.names, inNcells = rowSums(sc.GE>0), mean.expr = rowMeans(sc.GE), sd = rowSds(sc.GE))
-#head(gene.meta)
-
+# pal.GT                      <- color.tsne.  
+# scales::show_col(pal.GT)
+# scales::show_col(color.tsne)
 ```
 
 ## Compute Super-cells structure
@@ -144,7 +132,8 @@ SC.list <- compute_supercells(
   fast.pca = TRUE,
   genes.use = .genes.use, 
   genes.exclude = .genes.omit,
-  seed.seq = .seed.seq
+  seed.seq = .seed.seq,
+  verbose = TRUE
   )
 
 cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "), 
@@ -232,21 +221,47 @@ cat(paste(
   paste(names(SC.list), collapse = ", "),
   "\nSC.list was saved to", file.path(data.folder, "SC", paste0(filename, ".Rds"))
 ))
+
+SC.list <-  readRDS(file = file.path(data.folder, "SC", paste0(filename, ".Rds")))
 ```
+
+### START FROM HERE!!!
+
+```{r single-cell clustering}
+genes.use <- SC.list$Exact$`10`$`12345`$genes.use
+if(length(.N.comp) == 1) {N.comp <- 1:.N.comp} else {N.comp <- .N.comp}
+
+X.for.pca       <- scale(Matrix::t(sc.GE[genes.use,]))
+sc.pca          <- irlba::irlba(X.for.pca, nv = max(N.comp, 25))
+sc.pca$x        <- sc.pca$u %*% diag(sc.pca$d)
+
+if(ToClusterSinglecell){
+  sc.dist <- dist(sc.pca$x[,N.comp])
+  sc.clustering.hcl <- hclust(sc.dist, method = "ward.D2")
+  
+  saveRDS(sc.clustering.hcl, file = file.path(data.folder, "sc_clustering_hcl.Rds"))
+} else {
+  sc.clustering.hcl <- readRDS(file.path(data.folder, "sc_clustering_hcl.Rds"))
+}
+
+sc.clustering <- cutree(sc.clustering.hcl, k = N.clusters)
+
+```
+
 
 ## Annotate super-cells to the cell lines based on the cell line annotation of single-cell and compute super-cell purity in terms of this annotation 
 ```{r annotate super-cell}
 SC.list <- annotate_supercells_to_cluster(
   SC.list = SC.list,
-  sc.annotation = GT.cell.type, 
-  annotation.name = 'cell_line'
+  sc.annotation = sc.clustering, 
+  annotation.name = 'sc_clustering'
   )
 ```
 
 ```{r plot super-cell purity in terms of cell-line annotation, message=FALSE, warning=FALSE}
 purity.df <- plot_annotation_purity(
   SC.list, 
-  annotation.name = 'cell_line', w = 2.5, h = 2.5,
+  annotation.name = 'sc_clustering', w = 2.5, h = 2.5,
   )
 
 ```
@@ -271,7 +286,8 @@ SC.GE.list <- compute_supercells_GE(
   SC.list = SC.list,
   ToComputeSC_GE = ToComputeSC_GE, 
   data.folder = data.folder,
-  filename = filename
+  filename = filename,
+  verbose = FALSE
 )
 
 cat(paste("Gene expression profile computed for:", paste(names(SC.GE.list), collapse = ", "), 
@@ -291,17 +307,21 @@ dim(SC.list$Metacell_default_av$`100`$`12345`$mc_info$mc@mc_fp)
 
 ## Dimensionality reduction of Super-cell data
 ```{r}
+filename <- paste0("all_PCA", filename_suf)
+
 SC.list <- compute_supercells_PCA(
   SC.list = SC.list,
   SC.GE.list = SC.GE.list,
   N.comp = .N.comp
 )
 
-saveRDS(SC.list, file = file.path(data.folder, 'SC', 'all_PCA.Rds'))
+saveRDS(SC.list, file = file.path(data.folder, 'SC', paste0(filename, '.Rds')))
 ```
 
 ```{r}
-SC.list <- readRDS(file.path(data.folder, 'SC', 'all_PCA.Rds'))
+filename <- paste0("all_PCA", filename_suf)
+
+SC.list <- readRDS(file = file.path(data.folder, 'SC', paste0(filename, '.Rds')))
 ```
 
 
@@ -314,19 +334,18 @@ SC.list <- compute_supercells_clustering(
   N.clusters.seq = c(2:10),
   pca_name = 'SC_PCA'
 )
-
-saveRDS(SC.list, file = file.path(data.folder, 'SC', 'all_PCA.Rds'))
 ```
 
-```{r single-cell clustering}
-genes.use <- SC.list$Exact$`2`$`12345`$genes.use
-if(length(.N.comp) == 1) {N.comp <- 1:.N.comp} else {N.comp <- .N.comp}
+```{r}
+filename <- paste0("all_PCA_clust", filename_suf)
 
-sc.pca <- prcomp(t(sc.GE[genes.use,]), scale. = T, center = T)
-sc.dist <- dist(sc.pca$x[,N.comp])
-sc.clustering <- hclust(sc.dist, method = "ward.D2")
-sc.clustering <- cutree(sc.clustering, k = length(unique(GT.cell.type)))
+saveRDS(SC.list, file = file.path(data.folder, 'SC', paste0(filename, '.Rds')))
+```
 
+```{r}
+filename <- paste0("all_PCA_clust", filename_suf)
+
+SC.list <- readRDS(file = file.path(data.folder, 'SC', paste0(filename, '.Rds')))
 ```
 
 
@@ -343,8 +362,11 @@ alt.clusterings <- compute_alternative_clustering(
   sc.pca = sc.pca$x,
   N.comp = .N.comp,
   N.clusters.seq = .N.clusters.seq,
-  seed.seq = .seed.seq
+  hclust_methods = c("average", "mcquitty", "median"),
+  seed.seq = .seed.seq,
+  verbose = T
 )
+saveRDS(sc.clustering, file = file.path(data.folder, "sc_alternative_clustering.Rds"))
 ```
 
 
@@ -352,7 +374,7 @@ alt.clusterings <- compute_alternative_clustering(
 ```{r}
 clust.consistency <- compute_consistency_of_supercell_clustering(
   SC.list = SC.list, 
-  sc.annotation = GT.cell.type, 
+  sc.annotation = sc.clustering, 
   sc.clustering = sc.clustering,
   sc.alternative.clustering = alt.clusterings
 )
@@ -361,96 +383,25 @@ clust.consistency <- compute_consistency_of_supercell_clustering(
 ```{r, warning=FALSE, message=FALSE}
 clust.consistency_summary <- plot_clustering_consistency(
   clust.consistency, 
-  min.value.alt.clustering = 0.5,
+  min.value.alt.clustering = 0.,
   error_bars = "extr"
 )
 clust.consistency_summary
 ```
 
+```{r}
+cur.SC <- SC.list$Exact$`100`$`12345`
+set.seed(12345)
+lay <- igraph::layout.fruchterman.reingold(cur.SC$graph.supercells)
+
+supercell_plot(cur.SC$graph.supercells, group = cur.SC$hclust$`4`, lay = lay)
+supercell_plot(cur.SC$graph.supercells, group = cur.SC$sc_clustering, lay = lay)
+```
+
 
 ```{r}
 set.seed(123)
-supercell_plot(SC.list$Exact$`20`$`12345`$graph.supercells)
-```
-
-```{r add field with clustering results}
-N.clusters
-clust.name <- paste0("hclust_", N.clusters)
-
-## add clustering result field
-for(meth in names(SC.list)){
-  for(gamma.ch in names(SC.list[[meth]])){
-    for(seed.i.ch in names(SC.list[[meth]][[gamma.ch]])){
-      
-      SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]] <- 
-        as.character(SC.list[[meth]][[gamma.ch]][[seed.i.ch]][["hclust"]][[as.character(N.clusters)]])
-    }
-  }
-}
-
-## map clustering result to GT cell type (cell line)
-SC.list <- map_clustering_to_cell_type(
-  SC.list = SC.list, 
-  GT.cell.type = GT.cell.type,
-  clust.name = clust.name
-)
-
-clust.name.dea <- paste0(clust.name, "_mapped_to_GT")
-
-
-### map single-cell clustering to GT annotation 
-sc.clustering.mapped_to_GT <- 
-  GT.cell.type.names[diag_consistency_mtrx(
-    m = as.matrix(table(sc.clustering, GT.cell.type))
-  )$vcol[as.character(sc.clustering)]]
-
-```
-
-
-```{r compute supercell DEA}
-DEA.consistency <- compute_supercells_DEA(
-  SC.list = SC.list,
-  SC.GE.list = SC.GE.list,
-  cluster.name = clust.name.dea,
-  verbose = TRUE
-)
-```
-
-```{r}
-DEA.consistency.new <- list()
-for(meth in names(DEA.consistency)){
-  DEA.consistency.new[[meth]] <- list()
-  
-  for(gamma.ch in names(DEA.consistency[[meth]])){
-    DEA.consistency.new[[meth]][[gamma.ch]] <- list()
-    
-    for(seed.i.ch in names(DEA.consistency[[meth]][[gamma.ch]])){
-      DEA.consistency.new[[meth]][[gamma.ch]][[seed.i.ch]] <- list()
-      
-      for(cl in 1:N.clusters){
-        cur.dea <- DEA.consistency[[meth]][[gamma.ch]][[seed.i.ch]][[cl]]
-        cur.dea$gamma.actual <- DEA.consistency[[meth]][[gamma.ch]][[seed.i.ch]]$gamma.actual
-        
-        DEA.consistency.new[[meth]][[gamma.ch]][[seed.i.ch]][[as.character(cl)]] <- cur.dea
-      }
-    }
-  }
-}
-```
-
-
-
-```{r}
-table(
-  SC.list$Exact$`10`$`12345`$hclust_5_mapped_to_GT[SC.list$Exact$`10`$`12345`$membership], 
-  GT.cell.type
-)
-
-table(
-  SC.list$Exact$`10`$`12345`$hclust_5[SC.list$Exact$`10`$`12345`$membership], 
-  GT.cell.type
-)
-
+supercell_plot(SC.list.pca$Exact$`20`$`12345`$graph.supercells)
 ```
 
 

@@ -56,7 +56,10 @@ compute_supercells_DEA <- function(
             ...
           )
         } else {
-          cur.res <- SuperCell::supercell_FindMarkers(
+          idnt.name <- paste(ident.1, collapse = "_")
+          cur.res <- list()
+
+          cur.res[[idnt.name]] <- SuperCell::supercell_FindMarkers(
             ge = cur.GE,
             supercell_size = cur.SC$supercell_size,
             clusters = clusters,
@@ -78,17 +81,19 @@ compute_supercells_DEA <- function(
             r$logFC_AUC <- mlt * r$logFC +
               (1 - mlt)*runif(min = 0, max = 1e-1, n = length(mlt)) * sign(r$logFC)
 
+
+            ## save actual gamma
+            if("gamma.actual" %in% names(cur.SC)){
+              gamma.actual <- cur.SC$gamma.actual
+            } else {
+              gamma.actual <- as.numeric(gamma.ch)
+            }
+
+            r$gamma.actual <- gamma.actual
+
             return(r)
           })
 
-        ## save actual gamma
-        if("gamma.actial" %in% names(cur.SC)){
-          gamma.actual <- cur.SC$gamma.actual
-        } else {
-          gamma.actual <- as.numeric(gamma.ch)
-        }
-
-        cur.res$gamma.actual <- gamma.actual
 
         res[[meth]][[gamma.ch]][[seed.i.ch]] <- cur.res
       }
@@ -161,7 +166,7 @@ compute_consistency_of_supercell_DEA <- function(
             F1  = cur.F1,
             N.pos = cur.n.pos,
             Gamma = as.numeric(gamma.ch),
-            Gamma_actual = cur.DEA$gamma.actual,
+            Gamma_actual = unique(cur.DEA.cl$gamma.actual),
             Seed = as.numeric(seed.i.ch),
             Method = meth
           )
