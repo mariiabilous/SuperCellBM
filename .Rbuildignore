@@ -1,3 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^examples
+^plots$
+^examples$
+^examples/data$
+^plots/*$
