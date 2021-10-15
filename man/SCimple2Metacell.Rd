@@ -6,7 +6,7 @@
 \usage{
 SCimple2Metacell(
   X,
-  gamma,
+  gamma = 10,
   min_mc_size = NULL,
   p_resamp = 0.75,
   n_resamp = 500,

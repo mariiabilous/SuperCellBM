@@ -5,10 +5,10 @@
 #'
 #' @export
 
-SCimple2Metacell <- function(X, gamma, min_mc_size = NULL,  p_resamp = 0.75, n_resamp = 500, mc.alpha = 2, mc.K=30){
+SCimple2Metacell <- function(X, gamma = 10, min_mc_size = NULL,  p_resamp = 0.75, n_resamp = 500, mc.alpha = 2, mc.K=30){
 
   N.c <- length(X$cgraph@cell_names)
-  N.SC <- round(N.c/gamma)
+
   # compute min_mc_size such that it approximates N.SC (number of super-cells)
   if(is.null(min_mc_size)){
     min_mc_size <- gamma + 1

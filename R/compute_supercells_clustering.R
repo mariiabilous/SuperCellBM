@@ -14,7 +14,8 @@ compute_supercells_clustering <- function(
   SC.list,
   N.comp = 10,
   N.clusters.seq = c(2:10),
-  pca_name = 'SC_PCA'
+  pca_name = 'SC_PCA',
+  DO_silhouette = TRUE
 ){
 
   if(length(N.comp) == 1)
@@ -38,13 +39,15 @@ compute_supercells_clustering <- function(
         SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust <- list()
         SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust_silh <- c()
 
-        for(n.cl.cur in N.clusters.seq){
-          n.cl.cur.ch <- as.character(n.cl.cur)
-          SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust[[n.cl.cur.ch]]      <- cutree(cur.hcl$hcl, k = n.cl.cur)
-          SC.list[[meth]][[gamma.ch]][[seed.i.ch]][['silh:hclust']][n.cl.cur.ch]   <-
-            SuperCell::supercell_silhouette(x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust[[n.cl.cur.ch]],
-                                 dist = cur.dist,
-                                 supercell_size = cur.SC$supercell_size)$avg.width
+        if(DO_silhouette){
+          for(n.cl.cur in N.clusters.seq){
+            n.cl.cur.ch <- as.character(n.cl.cur)
+            SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust[[n.cl.cur.ch]]      <- cutree(cur.hcl$hcl, k = n.cl.cur)
+            SC.list[[meth]][[gamma.ch]][[seed.i.ch]][['silh:hclust']][n.cl.cur.ch]   <-
+              SuperCell::supercell_silhouette(x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust[[n.cl.cur.ch]],
+                                              dist = cur.dist,
+                                              supercell_size = cur.SC$supercell_size)$avg.width
+          }
         }
       }
     }

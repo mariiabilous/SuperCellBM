@@ -14,7 +14,8 @@ compute_supercells_PCA <- function(
   SC.GE.list,
   N.comp,
   genes.omit = NULL,
-  pca_name = 'SC_PCA'
+  pca_name = 'SC_PCA',
+  verbose = FALSE
 ){
 
   method.seq   <- names(SC.list)
@@ -31,7 +32,7 @@ compute_supercells_PCA <- function(
       cur.seed.seq <- names(SC.list[[meth]][[gamma.ch]])
 
       for(seed.i.ch in cur.seed.seq){
-        print(paste("Method:", meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch))
+        if(verbose) print(paste("Method:", meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch))
         cur.SC     <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
         cur.GE     <- SC.GE.list[[meth]][[gamma.ch]][[seed.i.ch]]
 

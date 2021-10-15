@@ -9,7 +9,8 @@ compute_supercells_PCA(
   SC.GE.list,
   N.comp,
   genes.omit = NULL,
-  pca_name = "SC_PCA"
+  pca_name = "SC_PCA",
+  verbose = FALSE
 )
 }
 \arguments{

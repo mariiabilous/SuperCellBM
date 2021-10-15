@@ -5,34 +5,31 @@
 \title{Plot DEA consistency}
 \usage{
 plot_DEA_consistency(
-  clust.consistency.df,
+  DEA.consistency.df,
   consistency.index.name = "TPR",
-  min.value.alt.clustering = 0,
   error_bars = c("extr", "quartiles", "sd")[1],
   SC_meth_exclude = c(),
   to.save.plot = TRUE,
   to.save.plot.raw = FALSE,
   asp = 0.5,
   fig.folder = "./plots",
-  .shapes = c(Exact = 1, Approximate = 0, Subsampling = 2, Random = 3,
-    Metacell_default_fp = 4, Metacell_default_av = 8, Metacell_SC_like_fp = 4,
-    Metacell_SC_like_av = 8, Alternative = 23),
-  .colors = c(Exact = "darkred", Approximate = "royalblue", Subsampling = "black",
-    Random = "gray", Metacell_default_fp = "forestgreen", Metacell_default_av =
-    "forestgreen", Metacell_SC_like_fp = "gold", Metacell_SC_like_av = "gold",
-    Alternative = "darkblue"),
+  .shapes = c(Exact = 1, Approx = 0, Subsampling = 2, Random = 3, Metacell_default_fp =
+    4, Metacell_default_av = 8, Metacell_SC_like_fp = 4, Metacell_SC_like_av = 8),
+  .colors = c(Exact = "darkred", Approx = "royalblue", Subsampling = "black", Random =
+    "gray", Metacell_default_fp = "forestgreen", Metacell_default_av = "forestgreen",
+    Metacell_SC_like_fp = "gold", Metacell_SC_like_av = "gold"),
   verbose = FALSE,
   ...
 )
 }
 \arguments{
-\item{clust.consistency.df}{output of \link{compute_consistency_of_supercell_DEA}}
-
 \item{consistency.index.name}{name of the consistency index (i.e., TPR, FPR, AUC, F1)}
 
 \item{error_bars}{name of values used for errorbars (for subsampling, random grouping,
 alternative clusteting of single cells and other methods with more than one clustering/simplification output).
 \code{'extr'} for min/max, \code{'quartiles'} for quartiles and \code{'sd'} for meadin +- sd}
+
+\item{clust.consistency.df}{output of \link{compute_consistency_of_supercell_DEA}}
 }
 \description{
 Plot DEA consistency
