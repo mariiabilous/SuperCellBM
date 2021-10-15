@@ -39,10 +39,11 @@ compute_supercells_clustering <- function(
         SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust <- list()
         SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust_silh <- c()
 
-        if(DO_silhouette){
-          for(n.cl.cur in N.clusters.seq){
-            n.cl.cur.ch <- as.character(n.cl.cur)
-            SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust[[n.cl.cur.ch]]      <- cutree(cur.hcl$hcl, k = n.cl.cur)
+
+        for(n.cl.cur in N.clusters.seq){
+          n.cl.cur.ch <- as.character(n.cl.cur)
+          SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust[[n.cl.cur.ch]]      <- cutree(cur.hcl$hcl, k = n.cl.cur)
+          if(DO_silhouette){
             SC.list[[meth]][[gamma.ch]][[seed.i.ch]][['silh:hclust']][n.cl.cur.ch]   <-
               SuperCell::supercell_silhouette(x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust[[n.cl.cur.ch]],
                                               dist = cur.dist,
