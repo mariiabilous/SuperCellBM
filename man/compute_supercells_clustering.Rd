@@ -8,7 +8,8 @@ compute_supercells_clustering(
   SC.list,
   N.comp = 10,
   N.clusters.seq = c(2:10),
-  pca_name = "SC_PCA"
+  pca_name = "SC_PCA",
+  DO_silhouette = TRUE
 )
 }
 \arguments{

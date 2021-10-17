@@ -73,19 +73,18 @@ map_clustering_to_cell_type <- function(
   for(meth in names(SC.list)){
     for(gamma.ch in names(SC.list[[meth]])){
       for(seed.i.ch in names(SC.list[[meth]][[gamma.ch]])){
+        print(paste(meth, ", Gamma:", gamma.ch, ", seed:", seed.i.ch ))
         cur.SC <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
 
-        if("membership" %in% names(cur.SC)){
-          mmbrshp <- cur.SC[["membership"]]
-        } else {
-          mmbrshp <- 1:length(cur.SC$supercell_size)
-        }
+        ifelse('cells.use.idx' %in% names(cur.SC),
+               cells.use.idx <- cur.SC[['cells.use.idx']],
+               cells.use.idx <- 1:length(cur.SC$membership)) # if not all single-cells are present in sinmplified data (subsapling or metacell)
 
-        if("cells.use.idx" %in% names(cur.SC)){
-          cells.use.idx <- cur.SC[["cells.use.idx"]]
-        } else {
-          cells.use.idx <- 1:length(mmbrshp)
-        }
+        ifelse('membership' %in% names(cur.SC),
+               mmbrshp <- cur.SC[['membership']][cells.use.idx],
+               mmbrshp <- 1:length(cells.use.idx)) # if not all single-cells are present in sinmplified data (subsapling or metacell)
+
+
 
         if(clust.name %in% names(cur.SC)){
           cur.cl    <- cur.SC[[clust.name]]
@@ -95,6 +94,10 @@ map_clustering_to_cell_type <- function(
 
         ## extrapolate SC clusterimg to single cells
         cur.cl.sc <- cur.cl[mmbrshp]
+        if(length(cur.cl.sc) != length(GT.cell.type[cells.use.idx])){
+          print(length(cur.cl.sc))
+          print(length(GT.cell.type[cells.use.idx]))
+        }
         cur.SC[[paste0(clust.name, "_mapped_to_GT")]] <-
           GT.cell.type.names[diag_consistency_mtrx(m = as.matrix(table(cur.cl.sc, GT.cell.type[cells.use.idx])))$vcol[as.character(cur.cl)]]
 
