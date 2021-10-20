@@ -59,13 +59,19 @@ rank_gene_gene_cor <- function(gene.gene.cor, N.top = NULL, p.val.thresh = 0.05,
 add_cor_pval <- function(
   gg.rank,
   ge,
-  membership = NULL,
+  cell.size = NULL,
   mean1 = FALSE
 ){
-  if(is.null(membership)){
 
-    membership <- 1:ncol(ge)
+  N.c <- ncol(ge)
+  N.g <- nrow(ge)
+
+  if(is.null(cell.size)){
+    cell.size <- rep(1, N.c)
   }
+
+  membership <- rep(1:N.c, cell.size)
+
   pval <- apply(gg.rank, 1, function(x){
     x1 <- ge[ x["Var1"], membership]
     x2 <- ge[ x["Var2"], membership]
@@ -73,7 +79,7 @@ add_cor_pval <- function(
     return(res)
   })
 
-  N.g <- nrow(ge)
+
   pval.adj <- p.adjust(pval, n = N.g*N.g/2) # adjust for the total number of comparisons
 
   gg.rank$wt.pval     <- pval
