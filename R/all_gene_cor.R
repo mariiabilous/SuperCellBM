@@ -9,7 +9,7 @@
 
 all_gene_cor_with_pval <- function(ge, cell.size = NULL, return.unwt.cor = FALSE,  mean1 = FALSE){
   if(return.unwt.cor){
-    cor          <- cor(t(ge))
+    cor          <- cor(Matrix::t(ge))
   } else {
     cor          <- NULL
   }
@@ -45,15 +45,15 @@ all_gene_cor_with_pval <- function(ge, cell.size = NULL, return.unwt.cor = FALSE
 
 all_gene_cor <- function(ge, cell.size = NULL, return.unwt.cor = FALSE){
   if(return.unwt.cor){
-    cor          <- cor(t(ge))
+    cor          <- cor(Matrix::t(ge))
   } else {
     cor <- NULL
   }
 
   if(!is.null(cell.size)){
-    w.cor          <- cov.wt(as.matrix(t(ge)), wt = cell.size, cor = TRUE)$cor
+    w.cor          <- cov.wt(as.matrix(Matrix::t(ge)), wt = cell.size, cor = TRUE)$cor
   } else {
-    w.cor          <- cor(t(ge))
+    w.cor          <- cor(Matrix::t(ge))
   }
 
   res <- list(cell.size    = cell.size,
