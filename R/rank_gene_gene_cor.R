@@ -46,6 +46,15 @@ rank_gene_gene_cor <- function(gene.gene.cor, N.top = NULL, p.val.thresh = 0.05,
   return(top.cor.genes)
 }
 
+#' computes p value of gene gene correlations
+#'
+#' @param gg.rank output of \link{rank_gene_gene_cor}
+#' @param ge super-cell gene expression matrix
+#' @param membership super-cell memberrship vector
+#'
+#' @return add p value and adjusted p value columns to \code{gg.rank}
+#'
+#' @export
 
 add_cor_pval <- function(
   gg.rank,
