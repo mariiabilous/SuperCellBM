@@ -50,13 +50,17 @@ rank_gene_gene_cor <- function(gene.gene.cor, N.top = NULL, p.val.thresh = 0.05,
 add_cor_pval <- function(
   gg.rank,
   ge,
-  cell.size = NULL,
+  membership = NULL,
   mean1 = FALSE
 ){
+  if(is.null(membership)){
+
+    membership <- 1:ncol(ge)
+  }
   pval <- apply(gg.rank, 1, function(x){
-    x1 <- ge[ x["Var1"], ]
-    x2 <- ge[ x["Var2"], ]
-    res <- weights::wtd.cor(x = x1, y = x2, weight = cell.size,  mean1 = mean1)[4]
+    x1 <- ge[ x["Var1"], membership]
+    x2 <- ge[ x["Var2"], membership]
+    res <- weights::wtd.cor(x = x1, y = x2, mean1 = mean1)[4]
     return(res)
   })
 
