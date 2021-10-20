@@ -231,7 +231,7 @@ compute_consistency_of_supercell_DEA <- function(
 
         cur.DEA           <- DEA.list[[meth]][[gamma.ch]][[seed.i.ch]]
 
-        if(is.null(names(cur.DEA))) names(cur.DEA) <- as.character(1:length(cur.DEA))
+        if(is.null(names(cur.DEA)) & length(cur.DEA) > 0) names(cur.DEA) <- as.character(1:length(cur.DEA))
         markers.logFC_AUC <- c()
 
         for(cl in names(cur.DEA)){
