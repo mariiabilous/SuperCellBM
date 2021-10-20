@@ -22,6 +22,7 @@ compute_supercells_DEA <- function(
   seed = 12345,
   verbose = FALSE,
   pval.thresh = 0.05,
+  logFC.thresh = 0,
   ...
 ){
 
@@ -215,6 +216,8 @@ compute_consistency_of_supercell_DEA <- function(
   verbose = FALSE
 ){
 
+  `%>%` <- dplyr::`%>%`
+
   tpr.dea <- data.frame()
 
   N.clusters    <- length(names(DEA.list)) # GT number of clusters (cell types)
@@ -228,8 +231,9 @@ compute_consistency_of_supercell_DEA <- function(
 
         cur.DEA           <- DEA.list[[meth]][[gamma.ch]][[seed.i.ch]]
 
+        if(is.null(names(cur.DEA))) names(cur.DEA) <- as.character(1:length(cur.DEA))
         markers.logFC_AUC <- c()
-        ## TO DO: ADD cell line_gene column
+
         for(cl in names(cur.DEA)){
           cur.DEA.cl      <- cur.DEA[[cl]]
 
@@ -278,7 +282,7 @@ compute_consistency_of_supercell_DEA <- function(
         cur.df <- cur.df[-nrow(cur.df),]
 
         cur.df <- cur.df %>%
-          filter(N.pos == min(N.markers, max(N.pos)))
+          dplyr::filter(N.pos == min(N.markers, max(N.pos)))
 
         tpr.dea <- rbind(tpr.dea, cur.df)
 
@@ -337,7 +341,7 @@ compute_consistency_of_supercell_DEA <- function(
     cur.df <- cur.df[-nrow(cur.df),]
 
     cur.df <- cur.df %>%
-      filter(N.pos == min(N.markers, max(N.pos)))
+      dplyr::filter(N.pos == min(N.markers, max(N.pos)))
 
     tpr.dea <- rbind(tpr.dea, cur.df)
   }
@@ -388,8 +392,8 @@ plot_DEA_consistency <- function(
   }
 
   DEA.consistency.df_summarized <- DEA.consistency.df %>%
-    group_by(Method, Gamma_actual) %>%
-    summarise(
+    dplyr::group_by(Method, Gamma_actual) %>%
+    dplyr::summarise(
       meanScore   = mean(Score),
       firstQScore = unname(summary(Score)[2]),
       thirdQScore = unname(summary(Score)[5]),

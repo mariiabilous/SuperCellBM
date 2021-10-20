@@ -48,11 +48,12 @@ compute_supercells <- function(
 
   if(ToComputeSC){
 
+    methods <- c('Exact', 'Approx', 'Random', 'Subsampling')
+
     SC.list <- list()
-    SC.list[['Exact']] = list()
-    SC.list[['Approx']] = list()
-    SC.list[['Random']] = list()
-    SC.list[['Subsampling']] = list()
+    for(meth in methods){
+      SC.list[[meth]] = list()
+    }
 
     for(gamma in gamma.seq){
 
@@ -61,12 +62,13 @@ compute_supercells <- function(
         if(verbose) print(paste('GAMMMA:', gamma))
         gamma.ch <- as.character(gamma)
 
-        SC.list[['Exact']][[gamma.ch]] = list()
-        SC.list[['Approx']][[gamma.ch]] = list()
-        SC.list[['Random']][[gamma.ch]] = list()
-        SC.list[['Subsampling']][[gamma.ch]] = list()
+        for(meth in methods){
+          SC.list[[meth]][[gamma.ch]] <- list()
+        }
+
 
         ### Exact -- thi one can be replaced with rescaling for gamma > gamma.seq[1]
+
         if(verbose) print('Exact')
         SC.list[['Exact']][[gamma.ch]][[as.character(seed.seq[1])]] = SuperCell::SCimplify(
           X = sc.GE,
@@ -78,9 +80,11 @@ compute_supercells <- function(
           n.pc = n.pc,
           fast.pca = fast.pca)
 
+
         for(seed.i in seed.seq){
           if(verbose) print(paste('SEED:', seed.i))
           seed.i.ch = as.character(seed.i)
+
 
           ### Approx
           if(verbose) print('Approx')
@@ -97,11 +101,15 @@ compute_supercells <- function(
             seed = seed.i,
             approx.N = approx.N)
 
+
           ### Random
           if(verbose) print("Random")
           SC.list[['Random']][[gamma.ch]][[seed.i.ch]] <- SCimple2Random(SC = SC.list[['Exact']][[gamma.ch]][[1]],
                                                                          gamma = gamma,
                                                                          seed = seed.i)
+
+
+
           if(verbose) print("Subsampling")
           SC.list[['Subsampling']][[gamma.ch]][[seed.i.ch]] <- SCimple2Subsampling(X = sc.GE,
                                                                                    SC.list[['Exact']][[gamma.ch]][[1]],
@@ -110,9 +118,9 @@ compute_supercells <- function(
 
         }
 
-      }
-    }
+        }
 
+    }
 
     if(!dir.exists(filepath)){
       dir.create(filepath)
@@ -212,7 +220,7 @@ compute_supercells_additional_gammas <- function(
                                                                        seed = seed.i)
         if(verbose) print("Subsampling")
         SC.list[['Subsampling']][[gamma.ch]][[seed.i.ch]] <- SCimple2Subsampling(X = sc.GE,
-                                                                                 SC.list[['Exact']][[gamma.ch]][[1]],
+                                                                                 SC = SC.list[['Exact']][[gamma.ch]][[1]],
                                                                                  gamma = gamma,
                                                                                  seed = seed.i)
 
@@ -335,4 +343,27 @@ compute_supercells_additional_seeds <- function(
 
 }
 
+
+
+compute_supercells_specific_method <- function(
+  sc.GE,
+  gamma.seq,
+  methods = c('Exact', 'Approx', 'Random', 'Subsampling')[1],
+  filename = 'initial',
+  data.folder = './data',
+  n.var.genes = 1000,
+  k.knn = 5,
+  n.pc = 10,
+  approx.N = 1000,
+  fast.pca = TRUE,
+  genes.use = NULL,
+  genes.exclude = NULL,
+  seed.seq = c(12345, 111, 19, 42, 7)
+)
+{
+  if(!all(methods %in% c('Exact', 'Approx', 'Random', 'Subsampling'))){
+    stop("One or more methods not known, available methods are:",
+         paste(c('Exact', 'Approx', 'Random', 'Subsampling'), collapse = ", "))
+  }
+}
 

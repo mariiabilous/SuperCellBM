@@ -13,6 +13,7 @@ compute_supercells_DEA(
   seed = 12345,
   verbose = FALSE,
   pval.thresh = 0.05,
+  logFC.thresh = 0,
   ...
 )
 }

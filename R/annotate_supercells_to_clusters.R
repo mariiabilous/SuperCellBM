@@ -170,14 +170,16 @@ plot_annotation_purity <- function(
         Seed == seed)
 
 
+  u.Methods <- unique(df.to.plot$Method)
+
   g <- ggplot2::ggplot(df.to.plot, ggplot2::aes(x = Gamma_actual, y = medianPurity, color = Method, shape = Method)) +
     ggplot2::geom_point() +
     ggplot2::geom_line() +
     ggplot2::geom_errorbar(
       ggplot2::aes(ymin=firstQPurity, ymax=thirdQPurity), width=.0,
       position = ggplot2::position_dodge(0.02)) +
-    ggplot2::scale_color_manual(values = .colors) +
-    ggplot2::scale_shape_manual(values = .shapes) +
+    ggplot2::scale_color_manual(values = .colors[u.Methods]) +
+    ggplot2::scale_shape_manual(values = .shapes[u.Methods]) +
     ggplot2::scale_x_log10() +
     ggplot2::labs(x = 'Graining level', y = 'Annotation purity')
 
