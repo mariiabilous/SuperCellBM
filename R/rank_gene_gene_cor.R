@@ -80,6 +80,8 @@ add_cor_pval <- function(
       return(res)
     })
 
+    pval[is.nan(pval) | is.na(pval)] <- 1
+
 
     pval.adj <- p.adjust(pval, n = N.g*N.g/2) # adjust for the total number of comparisons
   } else {
