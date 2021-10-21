@@ -95,7 +95,7 @@ GO_match_summary <- function(
   res <- list()
 
   for(cl in names(GO_match_SC)){
-    print(cl)
+
     res[[cl]] <- data.frame()
 
     ### single-cell ###
@@ -118,9 +118,9 @@ GO_match_summary <- function(
     }
 
     s_jaccard <- as.array(summary(GO_match_sc_cur.jacc.signif.top))
-    print((s_jaccard))
+
     s_shared  <- as.array(summary(GO_match_sc_cur.shar.signif.top))
-    print((s_shared))
+
 
     res.cur <- data.frame(
       Meth = "Exact",
@@ -135,19 +135,18 @@ GO_match_summary <- function(
       GO_shared_N_NAs = unname(ifelse(length(s_shared)>=7, s_shared[7], 0)),
       stringsAsFactors = FALSE
     )
-    print(colnames(res.cur))
+
     res[[cl]] <- rbind(res[[cl]], res.cur)
-    print(colnames(res[[cl]]))
+
     ### super-cell ###
     for(meth in names(GO_match_SC[[cl]])){
-      print(meth)
+
       for(gamma.ch in names(GO_match_SC[[cl]][[meth]])){
-        print(gamma.ch)
+
         gamma <- as.numeric(gamma.ch)
         for(seed.i.ch in names(GO_match_SC[[cl]][[meth]][[gamma.ch]])){
 
           seed.i <- as.numeric(seed.i.ch)
-          print(seed.i)
 
           GO_match_SC_cur <- GO_match_SC[[cl]][[meth]][[gamma.ch]][[seed.i.ch]]
 
@@ -168,9 +167,6 @@ GO_match_summary <- function(
             GO_match_SC_cur.shar.signif.top[is.na(GO_match_SC_cur.shar.signif.top)] <- 0
           }
 
-          if(meth == "Subsampling"){
-            print(GO_match_SC_cur.jacc.signif.top)
-          }
 
           s_jaccard <- as.array(summary(GO_match_SC_cur.jacc.signif.top))
           s_jaccard[is.na(s_jaccard) | is.nan(s_jaccard)] <- 0
