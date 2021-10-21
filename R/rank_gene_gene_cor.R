@@ -66,22 +66,26 @@ add_cor_pval <- function(
   N.c <- ncol(ge)
   N.g <- nrow(ge)
 
-  if(is.null(cell.size)){
-    cell.size <- rep(1, N.c)
+  if(N.c > 0){
+    if(is.null(cell.size)){
+      cell.size <- rep(1, N.c)
+    }
+
+    membership <- rep(1:N.c, cell.size)
+
+    pval <- apply(gg.rank, 1, function(x){
+      x1 <- ge[ x["Var1"], membership]
+      x2 <- ge[ x["Var2"], membership]
+      res <- weights::wtd.cor(x = x1, y = x2, mean1 = mean1)[4]
+      return(res)
+    })
+
+
+    pval.adj <- p.adjust(pval, n = N.g*N.g/2) # adjust for the total number of comparisons
+  } else {
+    pval <- 1
+    pval.adj <- 1
   }
-
-  membership <- rep(1:N.c, cell.size)
-
-  pval <- apply(gg.rank, 1, function(x){
-    x1 <- ge[ x["Var1"], membership]
-    x2 <- ge[ x["Var2"], membership]
-    res <- weights::wtd.cor(x = x1, y = x2, mean1 = mean1)[4]
-    return(res)
-  })
-
-
-  pval.adj <- p.adjust(pval, n = N.g*N.g/2) # adjust for the total number of comparisons
-
   gg.rank$wt.pval     <- pval
   gg.rank$wt.adj.pval <- pval.adj
 

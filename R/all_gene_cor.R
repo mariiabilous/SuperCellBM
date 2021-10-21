@@ -56,6 +56,8 @@ all_gene_cor <- function(ge, cell.size = NULL, return.unwt.cor = FALSE){
     w.cor          <- cor(Matrix::t(ge))
   }
 
+  w.cor[is.na(w.cor)] <- 0
+
   res <- list(cell.size    = cell.size,
               cor          = cor,
               wt.cor       = w.cor)
