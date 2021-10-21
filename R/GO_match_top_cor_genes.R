@@ -45,6 +45,10 @@ GO_match_top_cor_genes <- function(
     GO_gene_x   <- bm.BP$go_id[bm.BP$hgnc_symbol == gene_x]
     GO_gene_y   <- bm.BP$go_id[bm.BP$hgnc_symbol == gene_y]
 
+    jaccard <- function(x, y){
+      return(length(intersect(x, y))/length(union(x, y)))
+    }
+
     if(is.nan(jaccard(GO_gene_x, GO_gene_y)) | is.null(GO_gene_x) | is.null(GO_gene_y)){
       res[["jaccard"]] <- c(res[["jaccard"]], NA)
 
