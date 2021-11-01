@@ -58,7 +58,7 @@ compute_supercells_GE <- function(
                     }
 
                     SC.GE.list[[SC.meth]][[gamma.ch]][[seed.i.ch]] <-
-                      supercell_GE(
+                    SuperCell::supercell_GE(
                         ge = sc.GE[,cur.idx],
                         groups = SC.list[[SC.meth]][[gamma.ch]][[seed.i.ch]]$membership[cur.idx]
                       )

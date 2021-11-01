@@ -9,7 +9,6 @@ plot_clustering_consistency(
   consistency.index.name = "ARI",
   min.value.alt.clustering = 0,
   error_bars = c("extr", "quartiles", "sd")[1],
-  SC_meth_exclude = c(),
   to.save.plot = TRUE,
   to.save.plot.raw = FALSE,
   asp = 0.5,

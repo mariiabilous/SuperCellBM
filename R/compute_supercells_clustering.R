@@ -33,11 +33,14 @@ compute_supercells_clustering <- function(
       for(seed.i.ch in cur.seed.seq){
         print(paste("Method:", meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch))
         cur.SC     <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
-        cur.dist   <- dist(cur.SC$SC_PCA$x[,N.comp])
+        if(!(pca_name %in% names(cur.SC))){
+          stop("pca_name", pca_name, "is not available in SC.list, please, provide a valid pca name!")
+        }
+        cur.dist   <- dist(cur.SC[[pca_name]]$x[,N.comp])
         cur.hcl    <- SuperCell::supercell_cluster(D = cur.dist, supercell_size = cur.SC$supercell_size, return.hcl = TRUE,  k = 2)
 
         SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust <- list()
-        SC.list[[meth]][[gamma.ch]][[seed.i.ch]]$hclust_silh <- c()
+        if(DO_silhouette) SC.list[[meth]][[gamma.ch]][[seed.i.ch]][['silh:hclust']] <- c()
 
 
         for(n.cl.cur in N.clusters.seq){
@@ -181,7 +184,6 @@ plot_clustering_consistency <- function(
   consistency.index.name = 'ARI',
   min.value.alt.clustering = 0,
   error_bars = c('extr', 'quartiles', 'sd')[1],
-  SC_meth_exclude = c(),
   to.save.plot = TRUE,
   to.save.plot.raw = FALSE,
   asp = 0.5,
@@ -226,7 +228,7 @@ plot_clustering_consistency <- function(
       minScore     = min(Score),
       maxScore     = max(Score),
       medianPsd    = min(median(Score)+sd(Score), 1),
-      medianMsd    = median(Score)-sd(Score))
+      medianMsd    = max(median(Score)-sd(Score), 0))
 
   clust.consistency.df_summarized[is.na(clust.consistency.df_summarized)] <- 0
 
@@ -265,7 +267,7 @@ plot_clustering_consistency <- function(
   ## Plot across gamma
   df.to.plot <- clust.consistency.df_summarized %>%
     dplyr::filter(
-      !(Method %in% SC_meth_exclude))
+      !(Method %in% ignore.methods) & !(Gamma %in% ignore.gammas))
 
   df.to.plot[['min_err_bar']] <- df.to.plot[[min_err_name]]
   df.to.plot[['max_err_bar']] <- df.to.plot[[max_err_name]]
@@ -293,7 +295,7 @@ plot_clustering_consistency <- function(
     filename = paste0(consistency.index.name, '_clustering_', clust_name, '_errbar_', error_bars)
     SCBM_saveplot(p = g, folder = fig.folder.save, name = filename, save.raw.ggplot = FALSE, asp = asp, ...)
   }
-  return(df.to.plot)
+  return(invisible(df.to.plot))
 
 }
 
@@ -355,4 +357,66 @@ compute_alternative_clustering <- function(
     }
   }
   return(sc.clust)
+}
+
+
+#' Computes silhouete distance for a list of clustring results
+#' @param SC.list super-cell-like structures
+#' @param N.comp number of principal components to use for distance calculation
+#' @param pca_name name (key) to PCA results
+#' @param clustering_name name (key) to clustering results. Clustering result are expected to be stores as a list with list names being number of custers and value being clustering partition
+#'
+#' @return SC.list with a silhouette field paste0("silh:", clustering_name)
+#' @export
+
+compute_supercells_silhouette <- function(
+  SC.list,
+  N.comp,
+  pca_name = "SC_PCA",
+  clustering_name = "hclust",
+  verbose = FALSE
+){
+  if(length(N.comp) == 1) N.comp = 1:N.comp
+  silh_name <- paste0("silh:", clustering_name)
+
+  for(meth in names(SC.list)){
+    for(gamma.ch in names(SC.list[[meth]])){
+      for(seed.i.ch in names(SC.list[[meth]][[gamma.ch]])){
+        if(verbose) print(meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch)
+
+        cur.SC <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
+
+        if(!(clustering_name %in% names(cur.SC))){
+          stop("Clustering name", clustering_name,
+               "is not available in SC.list, please, procide a valid clustering name!" )
+        }
+        cur.clustering    <- cur.SC[[clustering_name]]
+        N.clusters.seq.ch <- names(cur.clustering)
+
+        if(!(pca_name %in% names(cur.SC))){
+          stop("pca_name", pca_name, "is not available in SC.list, please, provide a valid pca name!")
+        }
+
+        cur.dist  <- dist(cur.SC[[pca_name]]$x[,N.comp])
+
+        if(silh_name %in% names(cur.SC)){
+          warning(paste("silh_name", silh_name, "is already available for SC.list! It will be overwritten, previous result will be stored in", paste0(silh_name, "_bkp")))
+          SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[paste0(silh_name, "_bkp")]] <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh_name]]
+        }
+
+        SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh_name]] <- c()
+
+        for(n.cl.cur.ch in N.clusters.seq.ch){
+          n.cl.cur <- as.numeric(n.cl.cur.ch)
+
+          SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh_name]][n.cl.cur.ch]   <-
+            SuperCell::supercell_silhouette(
+              x = cur.clustering[[n.cl.cur.ch]],
+              dist = cur.dist,
+              supercell_size = cur.SC$supercell_size)$avg.width
+        }
+      }
+    }
+  }
+  return(SC.list)
 }

@@ -291,6 +291,10 @@ compute_consistency_of_supercell_DEA <- function(
   }
 
   #####  for Gamma == 1
+  if(verbose) print("Gamma = 1")
+
+  if(is.null(names(sc.DEA)) & length(sc.DEA) > 0) names(sc.DEA) <- as.character(1:length(sc.DEA))
+
   markers.logFC_AUC <- c()
   for(cl in names(cur.DEA)){
     cur.DEA.cl      <- sc.DEA[[cl]]
@@ -355,7 +359,7 @@ compute_consistency_of_supercell_DEA <- function(
 #'
 #' @param clust.consistency.df output of \link{compute_consistency_of_supercell_DEA}
 #' @param consistency.index.name name of the consistency index (i.e., TPR, FPR, AUC, F1)
-#' @param
+#'
 #' @param error_bars name of values used for errorbars (for subsampling, random grouping,
 #' alternative clusteting of single cells and other methods with more than one clustering/simplification output).
 #' \code{'extr'} for min/max, \code{'quartiles'} for quartiles and \code{'sd'} for meadin +- sd
