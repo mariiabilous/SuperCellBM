@@ -382,7 +382,7 @@ compute_supercells_silhouette <- function(
   for(meth in names(SC.list)){
     for(gamma.ch in names(SC.list[[meth]])){
       for(seed.i.ch in names(SC.list[[meth]][[gamma.ch]])){
-        if(verbose) print(meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch)
+        if(verbose) print(paste(meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch))
 
         cur.SC <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
 
