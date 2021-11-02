@@ -184,6 +184,7 @@ plot_clustering_consistency <- function(
   consistency.index.name = 'ARI',
   min.value.alt.clustering = 0,
   error_bars = c('extr', 'quartiles', 'sd')[1],
+  fig.name = "",
   to.save.plot = TRUE,
   to.save.plot.raw = FALSE,
   asp = 0.5,
@@ -201,6 +202,7 @@ plot_clustering_consistency <- function(
 ){
 
   `%>%` <- dplyr::`%>%`
+  if(fig.name != "") fig.name <- paste0("_", fig.name)
 
   if(consistency.index.name %in% colnames(clust.consistency.df)){
     clust.consistency.df[["Score"]] <- clust.consistency.df[[consistency.index.name]]
@@ -292,7 +294,7 @@ plot_clustering_consistency <- function(
     if(!dir.exists(fig.folder.save))
       dir.create(fig.folder.save, recursive = TRUE)
 
-    filename = paste0(consistency.index.name, '_clustering_', clust_name, '_errbar_', error_bars)
+    filename = paste0(consistency.index.name, '_clustering_', clust_name, '_errbar_', error_bars, fig.name)
     SCBM_saveplot(p = g, folder = fig.folder.save, name = filename, save.raw.ggplot = FALSE, asp = asp, ...)
   }
   return(invisible(df.to.plot))
