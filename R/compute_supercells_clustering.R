@@ -422,3 +422,206 @@ compute_supercells_silhouette <- function(
   }
   return(SC.list)
 }
+
+
+
+#' Compute consistency of super-cell (meta-cell) clustering corresponding to optimal number of clusters with the GT annotation (or single-cell clustering, if GT annotation is not available)
+#'
+#'@param SC.list list of super-cells and other simplifications (output of \link{compute_supercell})
+#'@param GT_annotation ground truth clustering of single-cells
+#'@param sc.clustering clustering of single-cell data, if not provided (is NULL), will be set to \code{GT_annotation}
+#'@param clustering_name names of clustering (default is 'hclust')
+#'@param sc.alternative.clustering output of \link{compute_alternative_clustering} or NULL
+#'
+#'@export
+
+compute_consistency_of_supercell_optimal_clustering <- function(
+  SC.list,
+  sc.annotation,
+  sc.clustering = NULL,
+  clustering.name = 'hclust',
+  sc.alternative.clustering = NULL
+){
+
+  clust.comp <- data.frame()
+  silh_name  <- paste0("silh:", clustering.name)
+  N.GT.clusters    <- length(unique(sc.annotation)) # GT number of clusters
+
+  if(!(silh_name %in% names(SC.list[[1]][[1]][[1]]))){
+    SC.list <- compute_supercells_silhouette(
+      SC.list = SC.list,
+      N.comp = ncol(SC.list[[1]][[1]][[1]][["SC_PCA"]]$x),
+      pca_name = "SC_PCA",
+      clustering_name = clustering.name
+      )
+  }
+
+  for(meth in names(SC.list)){
+
+    for(gamma.ch in names(SC.list[[meth]])){
+      for(seed.i.ch in names(SC.list[[meth]][[gamma.ch]])){
+        print(paste(meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch))
+
+        cur.SC           <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
+
+
+        N.cl.optimal     <- names(cur.SC[[silh_name]])[which.max(cur.SC[[silh_name]])]
+
+        ifelse('cells.use.idx' %in% names(cur.SC),
+               cells.use.idx <- cur.SC[['cells.use.idx']],
+               cells.use.idx <- 1:length(sc.annotation)) # if not all single-cells are present in sinmplified data (subsapling or metacell)
+
+        ifelse('membership' %in% names(cur.SC),
+               mmbrshp <- cur.SC[['membership']][cells.use.idx],
+               mmbrshp <- 1:length(cells.use.idx)) # if not all single-cells are present in sinmplified data (subsapling or metacell)
+
+
+        cur.SC.clustering <- cur.SC[[clustering.name]][[N.cl.optimal]] # supercell clustering
+        cur.SC.clustering.sc <- cur.SC.clustering[mmbrshp]
+        cur.sc.annotation    <- sc.annotation[cells.use.idx] # GT single-cell clustering
+
+        cur.clust.comp <- aricode::clustComp(cur.SC.clustering.sc, cur.sc.annotation)
+
+        cur.clust.comp.df   <- data.frame(
+          cur.clust.comp,
+          Method = meth,
+          Gamma = as.numeric(gamma.ch),
+          Seed = as.numeric(seed.i.ch),
+          Clustering_name = clustering.name,
+          stringsAsFactors = FALSE
+        )
+
+        clust.comp <- rbind(clust.comp, cur.clust.comp.df)
+      }
+    }
+  }
+
+  ## for Gamma == 1
+  if(is.null(sc.clustering)){
+    sc.clustering <- sc.annotation
+  }
+  cur.clust.comp <- aricode::clustComp(sc.clustering, sc.annotation)
+
+  cur.clust.comp.df   <- data.frame(
+    cur.clust.comp,
+    Method = names(SC.list),
+    Gamma = 1,
+    Seed = as.numeric(names(SC.list[[1]][[1]])[1]),
+    Clustering_name = clustering.name,
+    stringsAsFactors = FALSE
+  )
+  clust.comp <- rbind(clust.comp, cur.clust.comp.df)
+
+
+  ## alternative clustering for single-cell data
+
+  if(!is.null(sc.alternative.clustering)){
+
+    if(!(as.character(N.GT.clusters) %in% names(sc.alternative.clustering))){
+      stop(paste("Clustering for", N.GT.clusters, "is not providede (", N.GT.clusters, "is not in names(sc.alternative.clustering))."))
+    }
+
+    sc.alternative.clustering.Ncl <- sc.alternative.clustering[[as.character(N.GT.clusters)]]
+
+    for(alt.cl.name in names(sc.alternative.clustering.Ncl)){
+      cur.clust.comp <- aricode::clustComp(sc.alternative.clustering.Ncl[[alt.cl.name]], sc.annotation)
+
+      cur.clust.comp.df   <- data.frame(
+        cur.clust.comp,
+        Method = 'Alternative',
+        Gamma = 1,
+        Seed = as.numeric(names(SC.list[[1]][[1]])[1]),
+        Clustering_name = alt.cl.name,
+        stringsAsFactors = FALSE
+      )
+      clust.comp <- rbind(clust.comp, cur.clust.comp.df)
+    }
+  }
+
+  return(clust.comp)
+}
+
+
+compute_supercells_unweighted_clustering <- function(
+  SC.list,
+  pca_name = "SC_PCA",
+  N.clusters.seq = NULL,
+  N.comp = NULL,
+  DO_silhouette = TRUE,
+  seed = 12345,
+  verbose = FALSE
+){
+  for(meth in names(SC.list)){
+    for(gamma.ch in names(SC.list[[meth]])){
+      for(seed.i.ch in names(SC.list[[meth]][[gamma.ch]])){
+        if(verbose) print(paste(meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch))
+        cur.SC <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
+
+
+        if(!(pca_name %in% names(cur.SC))){
+          stop("pca_name", pca_name, "is not available in SC.list, please, provide a valid pca name!")
+        }
+        if(is.null(N.comp)) N.comp <- ncol(cur.SC[[pca_name]]$x)
+        if(length(N.comp) == 1) N.comp <- 1:N.comp
+        if(is.null(N.clusters.seq)) N.clusters.seq <- as.numeric(names(cur.SC[["hclust"]]))
+
+        ### hclust
+        clust.name <- "unw_hclust"
+        if(verbose) print(clust.name)
+        silh.name  <- paste0("silh:", clust.name)
+        cur.dist   <- dist(cur.SC[[pca_name]]$x[,N.comp])
+
+        cur.hcl    <- SuperCell::supercell_cluster(D = cur.dist, return.hcl = TRUE,  k = 2)
+
+        SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]] <- list()
+        if(DO_silhouette) SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]] <- c()
+
+
+        for(n.cl.cur in N.clusters.seq){
+          n.cl.cur.ch <- as.character(n.cl.cur)
+          SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]]   <- cutree(cur.hcl$hcl, k = n.cl.cur)
+
+          if(DO_silhouette){
+            SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]][n.cl.cur.ch]   <-
+              summary(cluster::silhouette(
+                x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]],
+                dist = cur.dist))$avg.width
+          }
+        }
+
+
+        ### kmeans
+        clust.name <- "unw_kmeans"
+        if(verbose) print(clust.name)
+        silh.name  <- paste0("silh:", clust.name)
+        cur.pca    <- cur.SC[[pca_name]]$x[,N.comp]
+
+        SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]] <- list()
+        if(DO_silhouette) SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]] <- c()
+
+        for(n.cl.cur in N.clusters.seq){
+          n.cl.cur.ch <- as.character(n.cl.cur)
+          set.seed(seed)
+          SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]]   <- kmeans(
+            x = cur.pca,
+            centers = n.cl.cur
+          )$cluster
+
+          if(DO_silhouette){
+            SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]][n.cl.cur.ch]   <-
+              summary(cluster::silhouette(
+                x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]],
+                dist = cur.dist,
+                supercell_size = cur.SC$supercell_size))$avg.width
+          }
+        }
+
+        ### Seurat
+        # convert SC to seurat and cluster
+
+      }
+    }
+  }
+
+  return(SC.list)
+}

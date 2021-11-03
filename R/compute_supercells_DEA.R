@@ -6,6 +6,7 @@
 #' @param ident.1 name(s) of cluster for which markers are computed, if \code{NULL} (default), markers for all clusters will be computed (running \link[SuperCell]{supercell_FindAllMarkers} instead of \link[SuperCell]{supercell_FindMarkers}
 #' @param ident.2 name(s) of clusters for comparison. If \code{NULL} (defauld), then all the other clusters used
 #' @param seed sandom seed to compute logFC_AUC score
+#' @param DO_unweighted whether to compute not sample-weighed DEA
 #' @param ... other parameters of \link[SuperCell]{supercell_FindMarkers} or \link[SuperCell]{supercell_FindAllMarkers}
 #'
 #' @return list of DEA results for each super-cell like structure
@@ -23,6 +24,7 @@ compute_supercells_DEA <- function(
   verbose = FALSE,
   pval.thresh = 0.05,
   logFC.thresh = 0,
+  DO_unweighted = FALSE,
   ...
 ){
 
@@ -43,6 +45,9 @@ compute_supercells_DEA <- function(
         cur.SC     <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
         cur.GE     <- SC.GE.list[[meth]][[gamma.ch]][[seed.i.ch]]
 
+        cur.supercell_size  = cur.SC$supercell_size
+        if(DO_unweighted) cur.supercell_size <- NULL
+
         if(cluster.name %in% names(cur.SC)){
           clusters   <- cur.SC[[cluster.name]]
         } else {
@@ -52,7 +57,7 @@ compute_supercells_DEA <- function(
         if(is.null(ident.1)){ # find all genes
           cur.res <- SuperCell::supercell_FindAllMarkers(
             ge = cur.GE,
-            supercell_size = cur.SC$supercell_size,
+            supercell_size = cur.supercell_size,
             clusters = clusters,
             ...
           )
@@ -62,7 +67,7 @@ compute_supercells_DEA <- function(
 
           cur.res[[idnt.name]] <- SuperCell::supercell_FindMarkers(
             ge = cur.GE,
-            supercell_size = cur.SC$supercell_size,
+            supercell_size = cur.supercell_size,
             clusters = clusters,
             ident.1 = ident.1,
             ident.2 = ident.2,
@@ -279,10 +284,13 @@ compute_consistency_of_supercell_DEA <- function(
           Method = meth
         )
 
+
         cur.df <- cur.df[-nrow(cur.df),]
 
+        #closest N.pos to GT.N.genes
+        filt.N.pos <- cur.df[["N.pos"]][which.min(abs(cur.df[["N.pos"]] - min(N.markers, max(cur.df[["N.pos"]]))))]
         cur.df <- cur.df %>%
-          dplyr::filter(N.pos == min(N.markers, max(N.pos)))
+          dplyr::filter(N.pos == filt.N.pos)
 
         tpr.dea <- rbind(tpr.dea, cur.df)
 
@@ -343,9 +351,11 @@ compute_consistency_of_supercell_DEA <- function(
     )
 
     cur.df <- cur.df[-nrow(cur.df),]
+    #closest N.pos to GT.N.genes
+    filt.N.pos <- cur.df[["N.pos"]][which.min(abs(cur.df[["N.pos"]] - min(N.markers, max(cur.df[["N.pos"]]))))]
 
     cur.df <- cur.df %>%
-      dplyr::filter(N.pos == min(N.markers, max(N.pos)))
+      dplyr::filter(N.pos == filt.N.pos)
 
     tpr.dea <- rbind(tpr.dea, cur.df)
   }
@@ -371,7 +381,8 @@ plot_DEA_consistency <- function(
   DEA.consistency.df,
   consistency.index.name = 'TPR',
   error_bars = c('extr', 'quartiles', 'sd')[1],
-  SC_meth_exclude = c(),
+  ignore.gammas = c(),
+  ignore.methods = c(),
   to.save.plot = TRUE,
   to.save.plot.raw = FALSE,
   asp = 0.5,
@@ -445,11 +456,13 @@ plot_DEA_consistency <- function(
   ## Plot across gamma
   df.to.plot <- DEA.consistency.df_summarized %>%
     dplyr::filter(
-      !(Method %in% SC_meth_exclude))
+      !(Method %in% ignore.methods) & !(Gamma_actual %in% ignore.gammas))
 
   df.to.plot[['min_err_bar']] <- df.to.plot[[min_err_name]]
   df.to.plot[['max_err_bar']] <- df.to.plot[[max_err_name]]
 
+  .colors <- .colors[unique(df.to.plot$Method)]
+  .shapes <- .shapes[unique(df.to.plot$Method)]
 
   g <- ggplot2::ggplot(df.to.plot, ggplot2::aes(x = Gamma_actual, y = medianScore, color = Method, fill = Method,  shape = Method)) +
     ggplot2::geom_point() +
