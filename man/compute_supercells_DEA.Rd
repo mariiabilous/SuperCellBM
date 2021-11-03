@@ -14,6 +14,7 @@ compute_supercells_DEA(
   verbose = FALSE,
   pval.thresh = 0.05,
   logFC.thresh = 0,
+  DO_unweighted = FALSE,
   ...
 )
 }
@@ -29,6 +30,8 @@ compute_supercells_DEA(
 \item{ident.2}{name(s) of clusters for comparison. If \code{NULL} (defauld), then all the other clusters used}
 
 \item{seed}{sandom seed to compute logFC_AUC score}
+
+\item{DO_unweighted}{whether to compute not sample-weighed DEA}
 
 \item{...}{other parameters of \link[SuperCell]{supercell_FindMarkers} or \link[SuperCell]{supercell_FindAllMarkers}}
 }

@@ -13,6 +13,8 @@ plot_annotation_purity(
   to.save.plot.raw = FALSE,
   asp = 0.5,
   fig.folder = "./plots",
+  ignore.gammas = c(),
+  ignore.methods = c(),
   .shapes = c(Exact = 1, Approx = 0, Subsampling = 2, Random = 3, Metacell_default_fp =
     4, Metacell_default_av = 8, Metacell_SC_like_fp = 4, Metacell_SC_like_av = 8),
   .colors = c(Exact = "darkred", Approx = "royalblue", Subsampling = "black", Random =
