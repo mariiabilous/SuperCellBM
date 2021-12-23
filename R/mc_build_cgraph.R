@@ -41,7 +41,8 @@ mc_build_cgraph <- function(
   project_name = "metacell",
   balanced.Knn = TRUE,
   return.igraph = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  force_mcell_add_gene_stat = TRUE
 ){
 
   if(is.null(genes.to.use)){
@@ -70,7 +71,7 @@ mc_build_cgraph <- function(
   # create gene set (for this I have to run gene statistics and "filter" bad genes... although I keep all of them since they have been already filtered)
 
   gstat_name <- project_name
-  metacell::mcell_add_gene_stat(gstat_id = gstat_name, mat_id = mat_name, force=T)
+  metacell::mcell_add_gene_stat(gstat_id = gstat_name, mat_id = mat_name, force=force_mcell_add_gene_stat)
 
   gstat <- metacell::scdb_gstat(gstat_name)
 
@@ -140,9 +141,12 @@ mc_build_cgraph <- function(
     print("done as.undirected graph")
     graph$node.ids <- cgraph@nodes
     graph$node.idx <- pmatch(graph$node.ids, cgraph@cell_names)
+    res$igraph       <- graph
+  } else {
+    res$igraph       <- NA
   }
 
-  res$igraph       <- graph
+
   res$balanced.Knn <- balanced.Knn
   res$k.knn        <- k.knn
   res$project_name <- project_name

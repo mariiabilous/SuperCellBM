@@ -10,6 +10,7 @@ compute_supercells_GE(
   ToComputeSC_GE = TRUE,
   filename = "additional_gammas",
   data.folder = "./data",
+  folder.suf = "",
   verbose = FALSE
 )
 }

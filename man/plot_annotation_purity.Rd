@@ -21,6 +21,7 @@ plot_annotation_purity(
     "gray", Metacell_default_fp = "forestgreen", Metacell_default_av = "forestgreen",
     Metacell_SC_like_fp = "gold", Metacell_SC_like_av = "gold"),
   verbose = FALSE,
+  optimized.y.breaks = FALSE,
   ...
 )
 }

@@ -96,6 +96,7 @@ plot_annotation_purity <- function(
              "Metacell_default_fp"="forestgreen", "Metacell_default_av" = "forestgreen",
              "Metacell_SC_like_fp"="gold", "Metacell_SC_like_av" = "gold"),
   verbose = FALSE,
+  optimized.y.breaks = FALSE,
   ...
 ){
 
@@ -176,6 +177,14 @@ plot_annotation_purity <- function(
     dplyr::filter(
       !(Method %in% ignore.methods) & !(Gamma %in% ignore.gammas))
 
+  if(optimized.y.breaks){
+    ymin <- min(df.to.plot$medianPurity, na.rm = TRUE) - 0.02
+    ymin <- round(ymin, 2)
+    ymax <- 1
+    breaks <- seq(ymin, ymax, 0.01)
+    print(paste("breack:", paste(breaks, collapse = ", ")))
+  }
+
   u.Methods <- unique(df.to.plot$Method)
 
   g <- ggplot2::ggplot(df.to.plot, ggplot2::aes(x = Gamma_actual, y = medianPurity, color = Method, shape = Method)) +
@@ -184,10 +193,19 @@ plot_annotation_purity <- function(
     ggplot2::geom_errorbar(
       ggplot2::aes(ymin=firstQPurity, ymax=thirdQPurity), width=.0,
       position = ggplot2::position_dodge(0.02)) +
-    ggplot2::scale_color_manual(values = .colors[u.Methods]) +
-    ggplot2::scale_shape_manual(values = .shapes[u.Methods]) +
     ggplot2::scale_x_log10() +
     ggplot2::labs(x = 'Graining level', y = 'Annotation purity')
+
+  if(!is.null(.colors)){
+    g <- g + ggplot2::scale_color_manual(values = .colors[u.Methods])
+  }
+
+  if(!is.null(.shapes)){
+    g <- g + ggplot2::scale_shape_manual(values = .shapes[u.Methods])
+  }
+
+  if(optimized.y.breaks)
+    g <- g + ggplot2::scale_y_continuous(breaks = breaks, limits = c(min(breaks), 1))
 
   plot(g)
 

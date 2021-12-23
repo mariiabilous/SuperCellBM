@@ -12,7 +12,8 @@ mc_build_cgraph(
   project_name = "metacell",
   balanced.Knn = TRUE,
   return.igraph = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  force_mcell_add_gene_stat = TRUE
 )
 }
 \description{

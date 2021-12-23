@@ -461,8 +461,6 @@ plot_DEA_consistency <- function(
   df.to.plot[['min_err_bar']] <- df.to.plot[[min_err_name]]
   df.to.plot[['max_err_bar']] <- df.to.plot[[max_err_name]]
 
-  .colors <- .colors[unique(df.to.plot$Method)]
-  .shapes <- .shapes[unique(df.to.plot$Method)]
 
   g <- ggplot2::ggplot(df.to.plot, ggplot2::aes(x = Gamma_actual, y = medianScore, color = Method, fill = Method,  shape = Method)) +
     ggplot2::geom_point() +
@@ -470,12 +468,19 @@ plot_DEA_consistency <- function(
     ggplot2::geom_errorbar(
       ggplot2::aes(ymin=min_err_bar, ymax=max_err_bar), width=.0,
       position = ggplot2::position_dodge(0.02)) +
-    ggplot2::scale_color_manual(values = .colors) +
-    ggplot2::scale_fill_manual(values = .colors) +
-    ggplot2::scale_shape_manual(values = .shapes) +
     ggplot2::scale_x_log10() +
     ggplot2::labs(x = 'Graining level', y = paste0(consistency.index.name))
 
+  if(!is.null(.colors)){
+    .colors <- .colors[unique(df.to.plot$Method)]
+    g <- g + ggplot2::scale_color_manual(values = .colors) +
+      ggplot2::scale_fill_manual(values = .colors)
+  }
+
+  if(!is.null(.shapes)){
+    .shapes <- .shapes[unique(df.to.plot$Method)]
+    g <- g +  ggplot2::scale_shape_manual(values = .shapes)
+  }
   plot(g)
 
   if(to.save.plot){

@@ -242,6 +242,7 @@ plot_GO_match_score <- function(
               "Metacell_default_fp"="forestgreen", "Metacell_default_av" = "forestgreen",
               "Metacell_SC_like_fp"="gold", "Metacell_SC_like_av" = "gold"),
   verbose = FALSE,
+  p.size = 0.35,
   ...
 ){
 
@@ -305,6 +306,17 @@ plot_GO_match_score <- function(
           }
   )
 
+  ## GAMMA = 1
+  row <- GO_summary[GO_summary$Gamma == 1,]
+  for(meth in unique(GO_summary$Meth)[!grepl("metacell", unique(GO_summary$Meth), ignore.case = TRUE)]){
+    cur.row <- row
+    row$Meth <- meth
+    row <- rbind(row, cur.row)
+  }
+
+  #row$Method <- unique(GO_summary$Meth)[!grepl("metacell", unique(GO_summary$Meth), ignore.case = TRUE)]
+  GO_summary <- rbind(GO_summary, row)
+
   df.to.plot <- GO_summary %>%
     dplyr::filter(
       !(Meth %in% ignore.methods) & !(Gamma %in% ignore.gammas))
@@ -326,7 +338,7 @@ plot_GO_match_score <- function(
   g <- ggplot2::ggplot(df.to.plot,
                        ggplot2::aes(x = Gamma, y = medianScore, color = factor(Meth), shape = factor(Meth))) +
     ggplot2::geom_line() +
-    ggplot2::geom_point() +
+    ggplot2::geom_point(size = p.size) +
     ggplot2::geom_errorbar(
       ggplot2::aes(ymin=min_err_bar, ymax=max_err_bar), width=.0,
       position = ggplot2::position_dodge(0.02)) +

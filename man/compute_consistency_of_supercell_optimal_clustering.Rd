@@ -9,7 +9,8 @@ compute_consistency_of_supercell_optimal_clustering(
   sc.annotation,
   sc.clustering = NULL,
   clustering.name = "hclust",
-  sc.alternative.clustering = NULL
+  sc.alternative.clustering = NULL,
+  max.N.cl = NULL
 )
 }
 \arguments{

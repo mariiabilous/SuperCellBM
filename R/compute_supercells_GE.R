@@ -15,17 +15,16 @@ compute_supercells_GE <- function(
   ToComputeSC_GE = TRUE,
   filename = 'additional_gammas',
   data.folder = './data',
+  folder.suf = "",
   verbose = FALSE
 ){
 
-  filepath <- file.path(data.folder, 'SC_GE')
+  filepath <- file.path(data.folder, paste0('SC_GE', folder.suf))
   filename <- paste0(filename, '.Rds')
 
   SC.GE.list <- list()
 
   SC.methods <- names(SC.list)
-  gamma.seq <- as.numeric(names(SC.list[[1]]))
-  seed.seq <- as.numeric(names(SC.list[['approx']][[1]]))
 
   metacell_fp_names = grep('^Metacell_(.*)_fp', names(SC.list), value = TRUE)
 
@@ -87,5 +86,5 @@ compute_supercells_GE <- function(
   } else {
     SC.GE.list <- readRDS(file = file.path(filepath, filename))
   }
-  return(SC.GE.list)
+  return(invisible(SC.GE.list))
 }

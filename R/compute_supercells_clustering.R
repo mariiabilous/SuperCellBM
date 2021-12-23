@@ -75,7 +75,8 @@ compute_consistency_of_supercell_clustering <- function(
   sc.annotation,
   sc.clustering = NULL,
   clustering.name = 'hclust',
-  sc.alternative.clustering = NULL
+  sc.alternative.clustering = NULL,
+  verbose = FALSE
 ){
 
   clust.comp <- data.frame()
@@ -86,11 +87,11 @@ compute_consistency_of_supercell_clustering <- function(
 
     for(gamma.ch in names(SC.list[[meth]])){
       for(seed.i.ch in names(SC.list[[meth]][[gamma.ch]])){
-        print(paste(meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch))
+        if(verbose) print(paste(meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch))
 
         cur.SC           <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
 
-
+        if(clustering.name %in% names(cur.SC)){
 
         ifelse('cells.use.idx' %in% names(cur.SC),
                cells.use.idx <- cur.SC[['cells.use.idx']],
@@ -117,6 +118,9 @@ compute_consistency_of_supercell_clustering <- function(
         )
 
         clust.comp <- rbind(clust.comp, cur.clust.comp.df)
+        } else {
+          warning(paste(clustering.name, "was not found in SC at", meth, ", Gamma:", gamma.ch, ", Seed:", seed.i.ch))
+        }
       }
     }
   }
@@ -129,7 +133,7 @@ compute_consistency_of_supercell_clustering <- function(
 
   cur.clust.comp.df   <- data.frame(
     cur.clust.comp,
-    Method = names(SC.list),
+    Method = names(SC.list)[!grepl("metacell", names(SC.list), ignore.case = TRUE)],
     Gamma = 1,
     Seed = as.numeric(names(SC.list[[1]][[1]])[1]),
     Clustering_name = clustering.name,
@@ -274,6 +278,9 @@ plot_clustering_consistency <- function(
   df.to.plot[['min_err_bar']] <- df.to.plot[[min_err_name]]
   df.to.plot[['max_err_bar']] <- df.to.plot[[max_err_name]]
 
+  df.to.plot[['min_err_bar']][df.to.plot$Method == "Alternative"] <- df.to.plot[["minScore"]][df.to.plot$Method == "Alternative"]
+  df.to.plot[['max_err_bar']][df.to.plot$Method == "Alternative"] <- df.to.plot[["maxScore"]][df.to.plot$Method == "Alternative"]
+
 
   g <- ggplot2::ggplot(df.to.plot, ggplot2::aes(x = Gamma, y = medianScore, color = Method, fill = Method,  shape = Method)) +
     ggplot2::geom_point() +
@@ -281,11 +288,17 @@ plot_clustering_consistency <- function(
     ggplot2::geom_errorbar(
       ggplot2::aes(ymin=min_err_bar, ymax=max_err_bar), width=.0,
       position = ggplot2::position_dodge(0.02)) +
-    ggplot2::scale_color_manual(values = .colors) +
-    ggplot2::scale_fill_manual(values = .colors) +
-    ggplot2::scale_shape_manual(values = .shapes) +
     ggplot2::scale_x_log10() +
     ggplot2::labs(x = 'Graining level', y = paste0(consistency.index.name, ' (', clust_name,')'))
+
+  if(!is.null(.colors)){
+    g <- g + ggplot2::scale_color_manual(values = .colors) +
+      ggplot2::scale_fill_manual(values = .colors)
+  }
+
+  if(!is.null(.shapes)){
+    g <- g  + ggplot2::scale_shape_manual(values = .shapes)
+  }
 
   plot(g)
 
@@ -440,7 +453,8 @@ compute_consistency_of_supercell_optimal_clustering <- function(
   sc.annotation,
   sc.clustering = NULL,
   clustering.name = 'hclust',
-  sc.alternative.clustering = NULL
+  sc.alternative.clustering = NULL,
+  max.N.cl = NULL
 ){
 
   clust.comp <- data.frame()
@@ -463,9 +477,12 @@ compute_consistency_of_supercell_optimal_clustering <- function(
         print(paste(meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch))
 
         cur.SC           <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
+        cur.silh         <- cur.SC[[silh_name]]
 
+        if(is.null(max.N.cl)) max.N.cl <- max(as.numeric(names(cur.silh)))
 
-        N.cl.optimal     <- names(cur.SC[[silh_name]])[which.max(cur.SC[[silh_name]])]
+        cur.silh         <- cur.silh[as.numeric(names(cur.silh)) <= max.N.cl]
+        N.cl.optimal     <- names(cur.silh)[which.max(cur.silh)]
 
         ifelse('cells.use.idx' %in% names(cur.SC),
                cells.use.idx <- cur.SC[['cells.use.idx']],
@@ -541,13 +558,24 @@ compute_consistency_of_supercell_optimal_clustering <- function(
   return(clust.comp)
 }
 
-
+#' Coumputes unweighted clustering for super-cell-like list
+#' @param SC.list super-cell-like list
+#'
+#' @export
 compute_supercells_unweighted_clustering <- function(
   SC.list,
+  SC.GE.list = NULL,
+  algs = c("hclust", "kmeans", "seurat"),
   pca_name = "SC_PCA",
+  N.clusters = NULL,
   N.clusters.seq = NULL,
   N.comp = NULL,
   DO_silhouette = TRUE,
+  ignore.gammas = c(),
+  seurat_fields = c(),
+  def.resolution = 0.8,
+  step.resolution = 0.1,
+  max.counter = 20,
   seed = 12345,
   verbose = FALSE
 ){
@@ -555,8 +583,8 @@ compute_supercells_unweighted_clustering <- function(
     for(gamma.ch in names(SC.list[[meth]])){
       for(seed.i.ch in names(SC.list[[meth]][[gamma.ch]])){
         if(verbose) print(paste(meth, "Gamma:", gamma.ch, "Seed:", seed.i.ch))
-        cur.SC <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
 
+        cur.SC <- SC.list[[meth]][[gamma.ch]][[seed.i.ch]]
 
         if(!(pca_name %in% names(cur.SC))){
           stop("pca_name", pca_name, "is not available in SC.list, please, provide a valid pca name!")
@@ -565,63 +593,382 @@ compute_supercells_unweighted_clustering <- function(
         if(length(N.comp) == 1) N.comp <- 1:N.comp
         if(is.null(N.clusters.seq)) N.clusters.seq <- as.numeric(names(cur.SC[["hclust"]]))
 
-        ### hclust
-        clust.name <- "unw_hclust"
-        if(verbose) print(clust.name)
-        silh.name  <- paste0("silh:", clust.name)
         cur.dist   <- dist(cur.SC[[pca_name]]$x[,N.comp])
 
-        cur.hcl    <- SuperCell::supercell_cluster(D = cur.dist, return.hcl = TRUE,  k = 2)
+        ### hclust
+        if("hclust" %in% algs){
+          clust.name <- "unw_hclust"
+          if(verbose) print(clust.name)
+          silh.name  <- paste0("silh:", clust.name)
+          cur.hcl    <- SuperCell::supercell_cluster(D = cur.dist, return.hcl = TRUE,  k = 2)
 
-        SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]] <- list()
-        if(DO_silhouette) SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]] <- c()
+          SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]] <- list()
+          if(DO_silhouette) SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]] <- c()
 
 
-        for(n.cl.cur in N.clusters.seq){
-          n.cl.cur.ch <- as.character(n.cl.cur)
-          SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]]   <- cutree(cur.hcl$hcl, k = n.cl.cur)
+          for(n.cl.cur in N.clusters.seq){
+            n.cl.cur.ch <- as.character(n.cl.cur)
+            SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]]   <- cutree(cur.hcl$hcl, k = n.cl.cur)
 
-          if(DO_silhouette){
-            SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]][n.cl.cur.ch]   <-
-              summary(cluster::silhouette(
-                x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]],
-                dist = cur.dist))$avg.width
+            if(DO_silhouette){
+              SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]][n.cl.cur.ch]   <-
+                summary(cluster::silhouette(
+                  x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]],
+                  dist = cur.dist))$avg.width
+            }
           }
         }
 
-
         ### kmeans
-        clust.name <- "unw_kmeans"
-        if(verbose) print(clust.name)
-        silh.name  <- paste0("silh:", clust.name)
-        cur.pca    <- cur.SC[[pca_name]]$x[,N.comp]
+        if("kmeans" %in% algs){
+          clust.name <- "unw_kmeans"
+          if(verbose) print(clust.name)
+          silh.name  <- paste0("silh:", clust.name)
+          cur.pca    <- cur.SC[[pca_name]]$x[,N.comp]
 
-        SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]] <- list()
-        if(DO_silhouette) SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]] <- c()
+          SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]] <- list()
+          if(DO_silhouette) SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]] <- c()
 
-        for(n.cl.cur in N.clusters.seq){
-          n.cl.cur.ch <- as.character(n.cl.cur)
-          set.seed(seed)
-          SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]]   <- kmeans(
-            x = cur.pca,
-            centers = n.cl.cur
-          )$cluster
+          for(n.cl.cur in N.clusters.seq){
+            n.cl.cur.ch <- as.character(n.cl.cur)
+            set.seed(seed)
+            SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]]   <- kmeans(
+              x = cur.pca,
+              centers = n.cl.cur
+            )$cluster
 
-          if(DO_silhouette){
-            SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]][n.cl.cur.ch]   <-
-              summary(cluster::silhouette(
-                x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]],
-                dist = cur.dist,
-                supercell_size = cur.SC$supercell_size))$avg.width
+            if(DO_silhouette){
+              SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]][n.cl.cur.ch]   <-
+                summary(cluster::silhouette(
+                  x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]],
+                  dist = cur.dist,
+                  supercell_size = cur.SC$supercell_size))$avg.width
+            }
           }
         }
 
         ### Seurat
-        # convert SC to seurat and cluster
+        if((("seurat" %in% algs) | ("Seurat" %in% algs)) & !(gamma.ch %in% as.character(ignore.gammas))){
+          if(!is.null(SC.GE.list) & !is.null(N.clusters)){
+            clust.name <- "unw_seurat"
+            if(verbose) print(clust.name)
+            silh.name  <- paste0("silh:", clust.name)
 
+            SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]] <- list()
+            if(DO_silhouette) SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]] <- c()
+
+            cur.SC.GE <- SC.GE.list[[meth]][[gamma.ch]][[seed.i.ch]]
+
+            cur.SC.seurat <- SuperCell::supercell_2_Seurat(
+              SC.GE  = cur.SC.GE,
+              SC = cur.SC,
+              fields = seurat_fields,
+              var.genes = cur.SC$genes_use,
+              N.comp = N.comp
+            )
+
+            if(verbose) print("Done: supercell_2_Seurat()")
+
+            cur.SC.seurat  <- Seurat::FindNeighbors(cur.SC.seurat, verbose = FALSE, reduction = "pca_seurat", dims = N.comp, graph.name = "for_clustering")
+            if(verbose) print("Done: FindNeighbors()")
+            resolution     <- def.resolution
+            step.res       <- step.resolution
+
+            cur.SC.seurat <- FindClusters(cur.SC.seurat, print.output = FALSE, resolution = resolution, force.recalc = TRUE, graph.name = "for_clustering")
+
+            cur.clustering <- as.numeric(as.vector(cur.SC.seurat@active.ident)) + 1
+            n.cl.cur       <- length(unique(cur.clustering))
+            n.cl.cur.ch    <- as.character(n.cl.cur)
+            if(verbose) print(paste("Done first clustering (def), n.clust =", n.cl.cur))
+
+            SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[paste0("default_", clust.name)]] <- cur.clustering
+
+            SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]] <- cur.clustering
+
+            if(DO_silhouette){
+
+              s <- summary(cluster::silhouette(
+                  x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]],
+                  dist = cur.dist))
+
+              if("avg.width" %in% names(s)){
+                s <- s$avg.width
+              } else {
+                s <- NA
+              }
+
+              SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]][n.cl.cur.ch] <- s
+            }
+
+            # get clustering coresponding to true number of clusters
+            counter <- 1
+            step <- ifelse(n.cl.cur > N.clusters, "down", "up")
+            while(n.cl.cur != N.clusters & counter < max.counter){
+              counter <- counter + 1
+              if(n.cl.cur < N.clusters){
+                resolution <- resolution + step.res
+                step[counter] <- "up"
+              } else if(n.cl.cur > N.clusters){
+                resolution <- resolution - step.res
+                step[counter] <- "down"
+              }
+
+              if(resolution >= 0 & step[counter - 1] == step[counter]){
+                cur.SC.seurat <- FindClusters(cur.SC.seurat, print.output = FALSE, resolution = resolution, force.recalc = TRUE, graph.name = "for_clustering")
+                cur.clustering <- as.numeric(as.vector(cur.SC.seurat@active.ident)) + 1
+                n.cl.cur       <- length(unique(cur.clustering))
+                n.cl.cur.ch    <- as.character(n.cl.cur)
+                SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]] <- cur.clustering
+
+                if(DO_silhouette){
+
+                  s <- summary(cluster::silhouette(
+                    x = SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[clust.name]][[n.cl.cur.ch]],
+                    dist = cur.dist))
+
+                  if("avg.width" %in% names(s)){
+                    s <- s$avg.width
+                  } else {
+                    s <- NA
+                  }
+
+                  SC.list[[meth]][[gamma.ch]][[seed.i.ch]][[silh.name]][n.cl.cur.ch] <- s
+                }
+
+              }  else {
+                paste("different direction in two consecutive steps, trying smaller resolution step:", step.res)
+                if(step[counter] == "up"){
+                  resolution <- resolution - step.res
+                } else {
+                  resolution <- resolution + step.res
+                }
+                step.res <- step.res/2
+
+              }
+            }
+
+          } else {
+            warning("Unweighted seurat cannot be computed as `SC.GE.list` or `N.clusters` was not provided")
+          }
+        }
       }
     }
   }
 
   return(SC.list)
 }
+
+
+#' Coumputes unweighted clustering for single-cell data
+#' @param sc.pca single-cell pca
+#'
+#' @export
+compute_singlecell_unweighted_clustering <- function(
+  sc.pca,
+  sc.GE,
+  N.clusters.seq,
+  sc.dist = NULL,
+  N.clusters = NULL,
+  genes.use = NULL,
+  algs = c("hclust", "kmeans", "seurat"),
+  N.comp = NULL,
+  DO_silhouette = TRUE,
+  seurat_fields = c(),
+  def.resolution = 0.8,
+  step.resolution = 0.1,
+  max.counter = 20,
+  seed = 12345,
+  verbose = FALSE
+){
+  res <- list()
+
+
+  if(is.null(N.comp)) N.comp <- ncol(sc.pca$x)
+  if(length(N.comp) == 1) N.comp <- 1:N.comp
+
+  if(!is.null(sc.dist)){
+    cur.dist <- sc.dist
+  } else {
+    cur.dist   <- dist(sc.pca$x[,N.comp])
+  }
+
+  ### hclust
+  if("hclust" %in% algs){
+    clust.name <- "unw_hclust"
+    if(verbose) print(clust.name)
+    silh.name  <- paste0("silh:", clust.name)
+    cur.hcl    <- SuperCell::supercell_cluster(D = cur.dist, return.hcl = TRUE,  k = 2)
+
+    res[[clust.name]] <- list()
+    if(DO_silhouette) res[[silh.name]] <- c()
+
+
+    for(n.cl.cur in N.clusters.seq){
+      n.cl.cur.ch <- as.character(n.cl.cur)
+      res[[clust.name]][[n.cl.cur.ch]]   <- cutree(cur.hcl$hcl, k = n.cl.cur)
+
+      if(DO_silhouette){
+        res[[silh.name]][n.cl.cur.ch]   <-
+          summary(cluster::silhouette(
+            x = res[[clust.name]][[n.cl.cur.ch]],
+            dist = cur.dist))$avg.width
+      }
+    }
+  }
+
+  ### kmeans
+  if("kmeans" %in% algs){
+    clust.name <- "unw_kmeans"
+    if(verbose) print(clust.name)
+    silh.name  <- paste0("silh:", clust.name)
+    cur.pca    <- sc.pca$x[,N.comp]
+
+    res[[clust.name]] <- list()
+    if(DO_silhouette) res[[silh.name]] <- c()
+
+    for(n.cl.cur in N.clusters.seq){
+      n.cl.cur.ch <- as.character(n.cl.cur)
+      set.seed(seed)
+      res[[clust.name]][[n.cl.cur.ch]]   <- kmeans(
+        x = cur.pca,
+        centers = n.cl.cur
+      )$cluster
+
+      if(DO_silhouette){
+        res[[silh.name]][n.cl.cur.ch]   <-
+          summary(cluster::silhouette(
+            x = res[[clust.name]][[n.cl.cur.ch]],
+            dist = cur.dist))$avg.width
+      }
+    }
+  }
+
+  ### Seurat
+  if(("seurat" %in% algs) | ("Seurat" %in% algs)){
+    if(!is.null(genes.use) & !is.null(N.clusters) & !is.null(sc.GE)){
+      clust.name <- "unw_seurat"
+      if(verbose) print(clust.name)
+      silh.name  <- paste0("silh:", clust.name)
+
+      res[[clust.name]] <- list()
+      if(DO_silhouette) res[[silh.name]] <- c()
+
+
+      cur.sc.seurat <- SuperCell::supercell_2_Seurat(
+        SC.GE  = sc.GE,
+        SC = list(),
+        var.genes = genes.use,
+        N.comp = N.comp
+      )
+
+      print("Done SC 2 Seurat")
+      print(dim(cur.sc.seurat@reductions$pca@cell.embeddings))
+      cur.sc.seurat  <- Seurat::FindNeighbors(cur.sc.seurat, verbose = FALSE, reduction = "pca_seurat", dims = N.comp, graph.name = "for_clustering")
+      if(verbose) print("Done find neighbors")
+      resolution     <- def.resolution
+      step.res       <- step.resolution
+
+
+      cur.sc.seurat <- FindClusters(cur.sc.seurat, print.output = FALSE, resolution = resolution, force.recalc = TRUE, graph.name = "for_clustering")
+
+      cur.clustering <- as.numeric(as.vector(cur.sc.seurat@active.ident)) + 1
+      n.cl.cur       <- length(unique(cur.clustering))
+      n.cl.cur.ch    <- as.character(n.cl.cur)
+      if(verbose) print(paste("Done first clustering (def), n.clust =", n.cl.cur))
+
+      res[[paste0("default_", clust.name)]] <- cur.clustering
+
+      res[[clust.name]][[n.cl.cur.ch]] <- cur.clustering
+
+
+      if(DO_silhouette){
+
+        s <- summary(cluster::silhouette(
+          x = res[[clust.name]][[n.cl.cur.ch]],
+          dist = cur.dist))
+
+        if("avg.width" %in% names(s)){
+          s <- s$avg.width
+        } else {
+          s <- NA
+        }
+
+        res[[silh.name]][n.cl.cur.ch] <- s
+      }
+
+      # get clustering coresponding to true number of clusters
+      counter <- 1
+      step <- ifelse(n.cl.cur > N.clusters, "down", "up")
+      while(n.cl.cur != N.clusters & counter < max.counter){
+        counter <- counter + 1
+
+        if(n.cl.cur < N.clusters){
+          resolution <- resolution + step.res
+          step[counter] <- "up"
+        } else if(n.cl.cur > N.clusters){
+          resolution <- resolution - step.res
+          step[counter] <- "down"
+        }
+
+        if(resolution >= 0 & step[counter - 1] == step[counter]){
+          cur.sc.seurat <- FindClusters(cur.sc.seurat, print.output = FALSE, resolution = resolution, force.recalc = TRUE, graph.name = "for_clustering")
+          cur.clustering <- as.numeric(as.vector(cur.sc.seurat@active.ident)) + 1
+          n.cl.cur       <- length(unique(cur.clustering))
+          n.cl.cur.ch    <- as.character(n.cl.cur)
+          res[[clust.name]][[n.cl.cur.ch]] <- cur.clustering
+
+          if(DO_silhouette){
+
+            s <- summary(cluster::silhouette(
+              x = res[[clust.name]][[n.cl.cur.ch]],
+              dist = cur.dist))
+
+            if("avg.width" %in% names(s)){
+              s <- s$avg.width
+            } else {
+              s <- NA
+            }
+
+            res[[silh.name]][n.cl.cur.ch] <- s
+          }
+
+
+        } else {
+          paste("different direction in two consecutive steps, trying smaller resolution step:", step.res)
+          if(step[counter] == "up"){
+            resolution <- resolution - step.res
+          } else {
+            resolution <- resolution + step.res
+          }
+          step.res <- step.res/2
+
+        }
+      }
+
+    } else {
+      warning("Unweighted seurat cannot be computed as `genes.use` or `N.clusters` was not provided")
+    }
+  }
+
+  return(res)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

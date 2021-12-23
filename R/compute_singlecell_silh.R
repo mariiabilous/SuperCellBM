@@ -16,6 +16,7 @@ compute_singlecell_silh <- function(
   for(k.ch in names(clustering.list)){
     cur.cl <- clustering.list[[k.ch]]
 
+    print(k.ch)
     s <- summary(cluster::silhouette(
       x = cur.cl,
       dist = d

@@ -99,6 +99,12 @@ sc.counts   <- cell_lines_SCE@assays$data$counts
 colnames(sc.counts) <- cell.ids
 rownames(sc.counts) <- gene.names
 
+if(0){
+  saveRDS(sc.counts, file.path(data.folder, "sc_counts.Rds"))
+  
+  cell.meta.df <- cell_lines_SCE@colData
+  saveRDS(cell.meta.df, file.path(data.folder, "sc_meta_data_df.Rds"))
+}
 ## this is not needed at this point, but will be used later
 GT.cell.type <- cell_lines_SCE@colData$cell_line_demuxlet
 names(GT.cell.type) <- cell.ids
@@ -147,6 +153,14 @@ SC.list <- compute_supercells(
   seed.seq = .seed.seq
   )
 
+# min sizes of supre-cells
+lapply(SC.list$Exact, function(x){
+  min(x[[1]][["supercell_size"]])
+})
+
+#set min sizes of metacells 
+min_mc_size_seq <- c(1, 5, 10, 15, 20)
+
 cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "), 
           "\nat graining levels:", paste(names(SC.list[['Approx']]), collapse = ", "),
           "\nfor seeds:", paste(names(SC.list[['Approx']][[1]]), collapse = ", "), "\n",
@@ -159,10 +173,11 @@ cat(paste("Super-cell computed for:", paste(names(SC.list), collapse = ", "),
 
 ```{r compute metacells, results='hide', message=FALSE}
 
-SC.mc <- compute_supercells_metacells(
+SC.mc <- compute_supercells_metacells_with_min_mc_size(
   sc.counts = sc.counts, 
   gamma.seq = .gamma.seq,
   SC.list = SC.list,
+  min_mc_size_seq = min_mc_size_seq,
   proj.name = proj.name,
   ToComputeSC = ToComputeSC, 
   mc.k.knn = 100,
@@ -174,7 +189,7 @@ SC.mc <- compute_supercells_metacells(
 
 ### Get actual graining levels obtained with Metacell
 ```{r get actual graining levels obtained with metacell}
-additional_gamma_seq <- get_actual_gammas_metacell(SC.mc)
+additional_gamma_seq <- get_actual_gammas_metacell(SC.mc[1])
 
 cat(paste("Metacells were computed in", length(names(SC.mc)), "settings:", paste(names(SC.mc), collapse = ", "), 
           "\nfor Gammas:", paste(names(SC.mc[[1]]), collapse = ", "), 
@@ -193,6 +208,7 @@ SC.mc.expanded <- c(SC.mc.fp, SC.mc.av)
 
 names(SC.mc.expanded)
 rm(SC.mc.fp, SC.mc.av, SC.mc)
+
 ```
 
 ## Compute super-cells (Exact, Approx, Subsampling and Random) at the addidional grainig levels obtained with Metacell.
@@ -210,6 +226,7 @@ SC.list <- compute_supercells_additional_gammas(
   approx.N = .approx.N,
   fast.pca = TRUE
 )
+
 
 cat(paste("Super-cells of methods:", paste(names(SC.list), collapse = ", "), 
       "\nwere computed at aggitional graining levels:", paste(additional_gamma_seq, collapse = ", "), 
@@ -281,13 +298,6 @@ cat(paste("Gene expression profile computed for:", paste(names(SC.GE.list), coll
     ))
 ```
 
-```{r}
-dim(SC.GE.list$Metacell_SC_like_fp$`100`$`12345`)
-dim(SC.list$Metacell_default_fp$`100`$`12345`$mc_info$mc@mc_fp)
-
-dim(SC.GE.list$Exact$`100`$`12345`)
-dim(SC.list$Metacell_default_av$`100`$`12345`$mc_info$mc@mc_fp)
-```
 
 ## Dimensionality reduction of Super-cell data
 ```{r}
@@ -296,6 +306,8 @@ SC.list <- compute_supercells_PCA(
   SC.GE.list = SC.GE.list,
   N.comp = .N.comp
 )
+
+SC.list <- remove_mc_fields(SC.list)
 
 saveRDS(SC.list, file = file.path(data.folder, 'SC', 'all_PCA.Rds'))
 ```
@@ -308,24 +320,36 @@ SC.list <- readRDS(file.path(data.folder, 'SC', 'all_PCA.Rds'))
 
 ## Clustering 
 ```{r super-cell clustering}
-SC.list <- compute_supercells_clustering(
-  SC.list,
-  N.comp = 10,
-  N.clusters.seq = c(2:10),
-  pca_name = 'SC_PCA'
-)
-
-saveRDS(SC.list, file = file.path(data.folder, 'SC', 'all_PCA.Rds'))
+# clustering run at HPC
+if(0){
+  SC.list <- compute_supercells_clustering(
+    SC.list,
+    N.comp = 10,
+    N.clusters.seq = c(2:10),
+    pca_name = 'SC_PCA'
+  )
+  
+  saveRDS(SC.list, file = file.path(data.folder, 'SC', 'all_PCA_clustering.Rds'))
+} else {
+  
+  SC.list <- readRDS(file.path(data.folder, "SC", "all_PCA_clustering.Rds"))
+}
 ```
 
 ```{r single-cell clustering}
+# clustering run at HPC
 genes.use <- SC.list$Exact$`2`$`12345`$genes.use
-if(length(.N.comp) == 1) {N.comp <- 1:.N.comp} else {N.comp <- .N.comp}
+  if(length(.N.comp) == 1) {N.comp <- 1:.N.comp} else {N.comp <- .N.comp}
 
-sc.pca <- prcomp(t(sc.GE[genes.use,]), scale. = T, center = T)
-sc.dist <- dist(sc.pca$x[,N.comp])
-sc.clustering <- hclust(sc.dist, method = "ward.D2")
-sc.clustering <- cutree(sc.clustering, k = length(unique(GT.cell.type)))
+if(0){
+  sc.pca  <- prcomp(t(sc.GE[genes.use,]), scale. = T, center = T)
+  sc.dist <- dist(sc.pca$x[,N.comp])
+  sc.clustering <- hclust(sc.dist, method = "ward.D2")
+  sc.clustering <- cutree(sc.clustering, k = length(unique(GT.cell.type)))
+  saveRDS(sc.clustering, file = file.path(data.folder, 'sc_clustering.Rds'))
+} else {
+  sc.clustering <- readRDS(file.path(data.folder, 'sc_clustering.Rds'))
+}
 
 ```
 
@@ -336,33 +360,46 @@ devtools::install()
 
 detach('package:SuperCellBM', unload = TRUE)
 library(SuperCellBM)
+
 ```
 
 ```{r}
-alt.clusterings <- compute_alternative_clustering(
-  sc.pca = sc.pca$x,
-  N.comp = .N.comp,
-  N.clusters.seq = .N.clusters.seq,
-  seed.seq = .seed.seq
-)
+# clustering run at HPC
+if(0){
+  alt.clusterings <- compute_alternative_clustering(
+    sc.pca = sc.pca$x,
+    N.comp = .N.comp,
+    N.clusters.seq = .N.clusters.seq,
+    seed.seq = .seed.seq
+  )
+  saveRDS(alt.clusterings, file = file.path(data.folder, 'alt_clustering.Rds'))
+} else {
+  alt.clusterings <- readRDS(file.path(data.folder, 'alt_clustering.Rds'))
+}
 ```
 
 
 ### Consistency between super-cell clustering and cell lines
-```{r}
-clust.consistency <- compute_consistency_of_supercell_clustering(
-  SC.list = SC.list, 
-  sc.annotation = GT.cell.type, 
-  sc.clustering = sc.clustering,
-  sc.alternative.clustering = alt.clusterings
-)
+```{r clustering consistency}
+# run at HPC
+if(0){
+  clust.consistency <- compute_consistency_of_supercell_clustering(
+    SC.list = SC.list, 
+    sc.annotation = GT.cell.type, 
+    sc.clustering = sc.clustering,
+    sc.alternative.clustering = alt.clusterings
+  )
+  saveRDS(clust.consistency, file = file.path(data.folder, "clustering_consistency.Rds"))
+} else {
+  clust.consistency <- readRDS(file.path(data.folder, "clustering_consistency.Rds"))
+}
 ```
 
 ```{r, warning=FALSE, message=FALSE}
 clust.consistency_summary <- plot_clustering_consistency(
   clust.consistency, 
   min.value.alt.clustering = 0.5,
-  error_bars = "extr"
+  error_bars = "sd"
 )
 clust.consistency_summary
 ```
@@ -408,36 +445,75 @@ sc.clustering.mapped_to_GT <-
 
 
 ```{r compute supercell DEA}
-DEA.consistency <- compute_supercells_DEA(
-  SC.list = SC.list,
-  SC.GE.list = SC.GE.list,
-  cluster.name = clust.name.dea,
-  verbose = TRUE
-)
-```
-
-```{r}
-DEA.consistency.new <- list()
-for(meth in names(DEA.consistency)){
-  DEA.consistency.new[[meth]] <- list()
-  
-  for(gamma.ch in names(DEA.consistency[[meth]])){
-    DEA.consistency.new[[meth]][[gamma.ch]] <- list()
-    
-    for(seed.i.ch in names(DEA.consistency[[meth]][[gamma.ch]])){
-      DEA.consistency.new[[meth]][[gamma.ch]][[seed.i.ch]] <- list()
-      
-      for(cl in 1:N.clusters){
-        cur.dea <- DEA.consistency[[meth]][[gamma.ch]][[seed.i.ch]][[cl]]
-        cur.dea$gamma.actual <- DEA.consistency[[meth]][[gamma.ch]][[seed.i.ch]]$gamma.actual
-        
-        DEA.consistency.new[[meth]][[gamma.ch]][[seed.i.ch]][[as.character(cl)]] <- cur.dea
-      }
-    }
-  }
+# run DEA at HPC
+if(0){
+  DEA.SC <- compute_supercells_DEA(
+    SC.list = SC.list,
+    SC.GE.list = SC.GE.list,
+    cluster.name = clust.name.dea,
+    verbose = TRUE
+  )
+  saveRDS(DEA.SC, file.path(data.folder, "DEA_SC.Rds"))
+} else {
+  DEA.SC <- readRDS(file.path(data.folder, "DEA_SC.Rds"))
 }
 ```
 
+
+```{r single cell and GT DEA}
+# run at HPC
+if(0){
+  DEA.sc <- compute_singglecell_DEA(
+    sc.GE,
+    clusters = sc.clustering.mapped_to_GT
+  )
+  saveRDS(DEA.sc, file.path(data.folder, "DEA_singlecell.Rds"))
+} else {
+  DEA.sc <- readRDS(file.path(data.folder, "DEA_singlecell.Rds"))
+}
+
+# run at HPC
+if(0){
+  DEA.GT <- compute_singglecell_DEA(
+    sc.GE,
+    clusters = GT.cell.type
+  )
+  saveRDS(DEA.GT, file.path(data.folder, "DEA_GT.Rds"))
+} else {
+  DEA.GT <- readRDS(file.path(data.folder, "DEA_GT.Rds"))
+}
+```
+
+
+```{r}
+GT.DEA.bool <- compute_DEA_GT_bool(
+  DEA.GT,
+  all.genes = gene.names,
+  logFC.thresh = .logFC.thresh,
+  pval.thresh = .pval.thresh
+)
+
+```
+
+
+```{r}
+DEA.consistency <- compute_consistency_of_supercell_DEA(
+  DEA.list = DEA.SC,
+  GT.DEA.bool = GT.DEA.bool,
+  sc.DEA = DEA.sc,
+  verbose = T
+)
+
+
+DEA.consistency.df.plot <- plot_DEA_consistency(
+  DEA.consistency,
+  consistency.index.name = 'TPR',
+  error_bars = "quartiles"
+
+)
+
+
+```
 
 
 ```{r}

@@ -22,6 +22,7 @@ plot_GO_match_score(
     "gray", Metacell_default_fp = "forestgreen", Metacell_default_av = "forestgreen",
     Metacell_SC_like_fp = "gold", Metacell_SC_like_av = "gold"),
   verbose = FALSE,
+  p.size = 0.35,
   ...
 )
 }
