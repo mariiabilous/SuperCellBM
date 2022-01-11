@@ -6,11 +6,11 @@
 \usage{
 compute_supercells_metacells_with_min_mc_size(
   sc.counts,
-  gamma.seq,
-  SC.list,
   min_mc_size_seq,
   proj.name,
   ToComputeSC,
+  genes.use = NULL,
+  SC.list = NULL,
   mc.k.knn = 100,
   T_vm_def = 0.08,
   MC.folder = "MC",
@@ -19,7 +19,23 @@ compute_supercells_metacells_with_min_mc_size(
 )
 }
 \arguments{
+\item{sc.counts}{single-cell count matrix (genes by cells)}
+
+\item{min_mc_size_seq}{vector of min metacell sizes (to varry graining levels)}
+
+\item{proj.name}{project name to initiame MC and store MC outputs}
+
 \item{ToComputeSC}{if TRUE computes metacells, if FALSE, loads from corresponding folder}
+
+\item{genes.use}{genes used to build super-cells (for MC_gene_settings == 'Metacell_SC_like'), can be ommited if \code{SC.list} is provided}
+
+\item{mc.k.knn}{metacell k for knn}
+
+\item{T_vm_def}{metacell cutoff for variable genes}
+
+\item{MC.folder}{MC folder to store output}
+
+\item{MC_gene_settings}{do not touch :)}
 }
 \description{
 compute super-cell like structure of metacells (based on provided `min_mc_size` instead of `min_mc_size` as min supercell size)

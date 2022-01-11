@@ -80,15 +80,24 @@ compute_supercells_metacells <- function(
 
 #' compute super-cell like structure of metacells (based on provided `min_mc_size` instead of `min_mc_size` as min supercell size)
 #'
+#' @param sc.counts single-cell count matrix (genes by cells)
+#' @param min_mc_size_seq vector of min metacell sizes (to varry graining levels)
+#' @param proj.name project name to initiame MC and store MC outputs
 #' @param ToComputeSC if TRUE computes metacells, if FALSE, loads from corresponding folder
+#' @param genes.use genes used to build super-cells (for MC_gene_settings == 'Metacell_SC_like'), can be ommited if \code{SC.list} is provided
+#' @param mc.k.knn metacell k for knn
+#' @param T_vm_def metacell cutoff for variable genes
+#' @param MC.folder MC folder to store output
+#' @param MC_gene_settings do not touch :)
+#'
 #' @export
 compute_supercells_metacells_with_min_mc_size <- function(
   sc.counts,
-  gamma.seq,
-  SC.list,
   min_mc_size_seq,
   proj.name,
   ToComputeSC,
+  genes.use = NULL,
+  SC.list = NULL,
   mc.k.knn = 100,
   T_vm_def = 0.08,
   MC.folder = "MC",
@@ -99,17 +108,22 @@ compute_supercells_metacells_with_min_mc_size <- function(
   mc.bknn.list <- list()
   SC.mc <- list()
 
-  gamma.seq.SC <- as.numeric(names(SC.list[[1]]))
-
-  if(setdiff(gamma.seq, gamma.seq.SC)){
-    abscent_gammas <- setdiff(gamma.seq, gamma.seq.SC)
-    warning(paste("Some gammas in gamma.seq:", paste(abscent_gammas, collapse = ", "),
-                  "not found in SC.list, Metacell for these gammas will not be computed!"))
-    gamma.seq <- intersect(gamma.seq, gamma.seq.SC)
+  if(!is.null(SC.list)){
+    seed.ch <- names(SC.list[[1]][[1]])
+  } else {
+    seed.ch <- "12345"
   }
 
-  SC.gene.used <- SC.list[[1]][[1]][[1]]$genes.use
-  seed.ch <- names(SC.list[[1]][[1]])
+  if(is.null(genes.use) & is.null(SC.list)){
+    stop("Please provide either genes.use or SC.list parameter!")
+  }
+
+  if(is.null(genes.use)){
+    SC.gene.used <- SC.list[[1]][[1]][[1]]$genes.use
+  } else {
+    SC.gene.used <- genes.use
+  }
+
 
   for(MC_gene_setting in MC_gene_settings){
     mc.dir <- file.path(data.folder, MC.folder, MC_gene_setting)
