@@ -147,7 +147,7 @@ compute_supercells_metacells_with_min_mc_size <- function(
         T_vm = MC.T_vm,
         project_name = proj.name,
         balanced.Knn = T,
-        return.igraph = T,
+        return.igraph = F,
         verbose = verbose)
 
       SC.mc[[MC_gene_setting]] <- list()
